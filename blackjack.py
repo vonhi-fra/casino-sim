@@ -17,12 +17,6 @@ def count_hand(hand):
         aces -= 1
     return total
 
-def ifwant(player):
-    again = input("Do you want to play again? 1 - Yes, 2 - No: ")
-    if again == "1":
-        play_blackjack(player)
-    elif again == "2":
-        return player
 
 def play_blackjack(player):
     faces = ["A", "J", "Q", "K"]
@@ -39,9 +33,8 @@ def play_blackjack(player):
     print(f"Your cards: {player_cards[0]}, {player_cards[1]}")
     player_sum = count_hand(player_cards)
     if player_sum == 21:
-        player += 2.5*bet
+        player += int(2.5*bet)
         print(f"Blackjack! balance is now {player}$")
-        ifwant(player)
     print(player_sum)
     banker_sum = count_hand(banker_cards)
     decision = int(input("What do you want to do?\n1. Hit\n2. Stand\n3. Double\n4. Split\n"))
@@ -51,7 +44,7 @@ def play_blackjack(player):
         player_cards.append(new_card)
         if count_hand(player_cards) > 21:
             print(f"You lost (your sum is over 21 ({count_hand(player_cards)}))")
-            break
+            return player
         decision = int(input("1. Hit\n2. Stand"))
     if decision == 2:
        player_sum = count_hand(player_cards)
@@ -60,14 +53,14 @@ def play_blackjack(player):
         print(f"New card {new_card}")
         player-=bet
         player_cards.append(new_card)
-        if count_hand(player_cards) > 21:
+        player_sum = count_hand(player_cards)
+        if player_sum > 21:
             print(f"You lost (your sum is over 21 ({count_hand(player_cards)}))")
-            return ifwant(player)
     if decision == 4:
         player-=bet
         player_hand_1 = [player_cards[0], deck.pop()]
         player_hand_2 = [player_cards[1], deck.pop()]
-
+    player_sum = count_hand(player_cards)
     print(f"Banker cards: {banker_cards[0]}, {banker_cards[1]}")
     while banker_sum <= 16:
         new_card = deck.pop()
@@ -78,7 +71,6 @@ def play_blackjack(player):
         if banker_sum > 21:
             player += 2*bet
             print(f"You won, balance = {player}$")
-            return ifwant(player)
         else:
             if banker_sum > player_sum:
                 print(f"You lost, balance = {player}$")
@@ -92,7 +84,6 @@ def play_blackjack(player):
         if banker_sum > 21:
             player += 2*bet
             print(f"You won, balance = {player}$")
-            return ifwant(player)
         else:
             if banker_sum > player_sum:
                 print(f"You lost, balance = {player}$")
@@ -102,4 +93,4 @@ def play_blackjack(player):
             elif banker_sum == player_sum:
                 player += bet
                 print(f"Draw, balance = {player}$")
-    return ifwant(player)
+    return player
