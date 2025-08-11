@@ -2,7 +2,7 @@ import card
 
 class Hand():
     __slots__ = ["cards", "bet"]
-    def __init__(self, bet = 0, cards = []):
+    def __init__(self, bet = 0, cards = [card(None, None, None), card(None, None, None)]):
         self.cards = cards
         self.bet = bet
     def __str__(self):

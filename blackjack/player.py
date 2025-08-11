@@ -1,3 +1,4 @@
+import hand
 import uuid
 class Player():
     __slots__ = ["nickname", "balance", "id", "hand"]
