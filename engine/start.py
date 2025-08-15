@@ -14,7 +14,7 @@ def main():
             user = create_player(nick, balance)
             print(f"Your id = {user.id}")
             f = open("engine/data.txt", "w")
-            f.write(f"{user.id}; {user.nickname}; {user.balance}")
+            f.write(f"{user.GetId()}; {user.GetNickname()}; {user.GetBalance()}")
             f.close()
 if __name__ == "__main__":
     main()
