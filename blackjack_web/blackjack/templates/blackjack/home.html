@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Blackjack Web</title>
+    <style>
+        body { font-family: Arial; margin: 40px; }
+        .player-list { margin: 20px 0; }
+        .player-item { padding: 10px; border: 1px solid #ddd; margin: 5px 0; }
+        .btn { padding: 10px 20px; background: #007cba; color: white; text-decoration: none; }
+    </style>
+</head>
+<body>
+    <h1>Blackjack Web</h1>
+    
+    <div>
+        <a href="{% url 'create_player' %}" class="btn">Create New Player</a>
+    </div>
+    
+    <div class="player-list">
+        <h2>Players:</h2>
+        {% for player in players %}
+            <div class="player-item">
+                <strong>{{ player.nickname }}</strong> - Balance: ${{ player.balance }}
+                <a href="{% url 'play_game' player.id %}" class="btn" style="margin-left: 20px;">Play Game</a>
+            </div>
+        {% empty %}
+            <p>No players yet. Create one!</p>
+        {% endfor %}
+    </div>
+</body>
+</html>

@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Play Blackjack - {{ player.nickname }}</title>
+    <style>
+        body { font-family: Arial; margin: 40px; }
+        .player-info { background: #f0f0f0; padding: 20px; margin-bottom: 20px; }
+        form { max-width: 400px; }
+        input { padding: 10px; margin: 10px 0; width: 100%; }
+        .btn { padding: 10px 20px; background: #007cba; color: white; border: none; }
+    </style>
+</head>
+<body>
+    <div class="player-info">
+        <h2>Player: {{ player.nickname }}</h2>
+        <p>Balance: ${{ player.balance }}</p>
+    </div>
+    
+    <h3>Place Your Bet</h3>
+    
+    <form method="post">
+        {% csrf_token %}
+        <div>
+            <label>Bet Amount:</label>
+            <input type="number" name="bet_amount" min="1" max="{{ player.balance }}" value="100" required>
+        </div>
+        
+        <button type="submit" class="btn">Deal Cards</button>
+    </form>
+    
+    <a href="{% url 'home' %}">← Back to Home</a>
+</body>
+</html>

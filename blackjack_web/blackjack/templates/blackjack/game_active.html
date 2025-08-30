@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Blackjack Game - {{ player.nickname }}</title>
+    <style>
+        body { 
+            font-family: Arial, sans-serif; 
+            margin: 0; 
+            background: linear-gradient(135deg, #0f5132, #198754);
+            color: white;
+            min-height: 100vh;
+        }
+        .container { max-width: 800px; margin: 0 auto; padding: 20px; }
+        .player-info { 
+            background: rgba(255,255,255,0.1); 
+            padding: 15px; 
+            border-radius: 10px; 
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        .game-table { 
+            background: rgba(0,0,0,0.3); 
+            border-radius: 15px; 
+            padding: 30px; 
+            margin: 20px 0; 
+        }
+        .hand { 
+            margin: 25px 0; 
+            padding: 20px; 
+            background: rgba(255,255,255,0.05); 
+            border-radius: 10px;
+        }
+        .hand h3 { margin-top: 0; color: #ffc107; }
+        .cards { 
+            font-size: 32px; 
+            margin: 15px 0; 
+            font-family: monospace;
+            letter-spacing: 3px;
+        }
+        .card { 
+            display: inline-block; 
+            background: white; 
+            color: black; 
+            padding: 8px 12px; 
+            margin: 3px; 
+            border-radius: 8px; 
+            box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+        }
+        .total { 
+            font-size: 18px; 
+            font-weight: bold; 
+            color: #ffc107; 
+        }
+        .actions { 
+            text-align: center; 
+            margin: 30px 0; 
+        }
+        .btn { 
+            padding: 12px 25px; 
+            margin: 8px; 
+            background: #dc3545; 
+            color: white; 
+            border: none; 
+            border-radius: 8px; 
+            font-size: 16px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        .btn:hover { background: #c82333; }
+        .btn-hit { background: #28a745; }
+        .btn-hit:hover { background: #218838; }
+        .btn-stand { background: #ffc107; color: black; }
+        .btn-stand:hover { background: #e0a800; }
+        .btn-double { background: #17a2b8; }
+        .btn-double:hover { background: #138496; }
+        .message { 
+            text-align: center; 
+            padding: 20px; 
+            margin: 20px 0; 
+            border-radius: 10px;
+        }
+        .success { background: rgba(40, 167, 69, 0.3); }
+        .error { background: rgba(220, 53, 69, 0.3); }
+        .nav-links { text-align: center; margin-top: 20px; }
+        .nav-links a { color: #ffc107; text-decoration: none; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="player-info">
+            <h2>{{ player.nickname }}</h2>
+            <p>Balance: ${{ player.balance }} | Current Bet: ${{ bet_amount }}</p>
+        </div>
+
+        {% if error %}
+            <div class="message error">{{ error }}</div>
+        {% endif %}
+
+        <div class="game-table">
+            <!-- Dealer's Hand -->
+            <div class="hand">
+                <h3>🏦 Dealer</h3>
+                <div class="cards">
+                    <span class="card">{{ game_state.dealer_visible }}</span>
+                    {% if game_state.status == 'finished' %}
+                        {% for card in game_state.dealer_cards %}
+                            {% if not forloop.first %}
+                                <span class="card">{{ card }}</span>
+                            {% endif %}
+                        {% endfor %}
+                        <div class="total">Total: {{ game_state.dealer_total }}</div>
+                    {% else %}
+                        <span class="card">🂠</span>
+                        <div class="total">Hidden</div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Player's Hand -->
+            <div class="hand">
+                <h3>🎲 Your Hand</h3>
+                <div class="cards">
+                    {% for card in game_state.player_cards %}
+                        <span class="card">{{ card }}</span>
+                    {% endfor %}
+                </div>
+                <div class="total">Total: {{ game_state.player_total }}</div>
+                
+                {% if game_state.new_card %}
+                    <div style="color: #28a745; margin-top: 10px;">
+                        ➤ New card: <span class="card">{{ game_state.new_card }}</span>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Game Messages -->
+        {% if game_state.status == 'blackjack' %}
+            <div class="message success">
+                <h2>🎉 BLACKJACK! 🎉</h2>
+                <p>You got 21! You win 3:2!</p>
+            </div>
+        {% elif game_state.status == 'bust' %}
+            <div class="message error">
+                <h2>💥 BUST! 💥</h2>
+                <p>Over 21! You lose.</p>
+            </div>
+        {% elif game_state.status == 'finished' %}
+            {% if game_state.result == 'win' %}
+                <div class="message success">
+                    <h2>🎊 YOU WIN! 🎊</h2>
+                    <p>Your {{ game_state.player_total }} beats dealer's {{ game_state.dealer_total }}!</p>
+                </div>
+            {% elif game_state.result == 'lose' %}
+                <div class="message error">
+                    <h2>😞 You Lose</h2>
+                    <p>Dealer's {{ game_state.dealer_total }} beats your {{ game_state.player_total }}</p>
+                </div>
+            {% elif game_state.result == 'draw' %}
+                <div class="message" style="background: rgba(255, 193, 7, 0.3);">
+                    <h2>🤝 Push (Draw)</h2>
+                    <p>Both have {{ game_state.player_total }}. Bet returned.</p>
+                </div>
+            {% endif %}
+        {% endif %}
+
+        <!-- Action Buttons -->
+        {% if game_state.status == 'playing' %}
+            <div class="actions">
+                <form method="post" style="display: inline;">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="hit">
+                    <button type="submit" class="btn btn-hit">🃏 Hit</button>
+                </form>
+                
+                <form method="post" style="display: inline;">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="stand">
+                    <button type="submit" class="btn btn-stand">✋ Stand</button>
+                </form>
+                
+                {% if game_state.can_double %}
+                <form method="post" style="display: inline;">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="double">
+                    <button type="submit" class="btn btn-double">⚡ Double Down</button>
+                </form>
+                {% endif %}
+            </div>
+        {% endif %}
+
+        <!-- Navigation -->
+        <div class="nav-links">
+            {% if game_state.game_over %}
+                <a href="{% url 'play_game' player.id %}" class="btn">🎰 Play Again</a>
+            {% endif %}
+            <a href="{% url 'home' %}" class="btn" style="background: #6c757d;">🏠 Home</a>
+        </div>
+    </div>
+</body>
+</html>

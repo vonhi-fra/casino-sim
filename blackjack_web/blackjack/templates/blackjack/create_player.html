@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Create Player</title>
+    <style>
+        body { font-family: Arial; margin: 40px; }
+        form { max-width: 400px; }
+        input { padding: 10px; margin: 10px 0; width: 100%; }
+        .btn { padding: 10px 20px; background: #007cba; color: white; border: none; }
+    </style>
+</head>
+<body>
+    <h1>Create New Player</h1>
+    
+    <form method="post">
+        {% csrf_token %}
+        <div>
+            <label>Nickname:</label>
+            <input type="text" name="nickname" required>
+        </div>
+        
+        <div>
+            <label>Initial Balance:</label>
+            <input type="number" name="balance" value="10000" min="1">
+        </div>
+        
+        <button type="submit" class="btn">Create Player</button>
+    </form>
+    
+    <a href="{% url 'home' %}">← Back to Home</a>
+</body>
+</html>
