@@ -1,12 +1,10 @@
 class Card:
-    """Klasa reprezentująca kartę do gry"""
     
     def __init__(self, symbol, color):
         self.symbol = symbol
         self.color = color
     
     def get_worth(self):
-        """Zwraca wartość karty"""
         if self.symbol in ["J", "Q", "K"]:
             return 10
         elif self.symbol == "A":

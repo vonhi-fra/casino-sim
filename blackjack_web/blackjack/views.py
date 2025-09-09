@@ -7,12 +7,10 @@ import json
 from core.roulette.game import RouletteGame
 
 def home(request):
-    """Strona główna - lista graczy"""
     players = Player.objects.all()
     return render(request, 'blackjack/home.html', {'players': players})
 
 def create_player(request):
-    """Tworzenie nowego gracza"""
     if request.method == 'POST':
         nickname = request.POST['nickname']
         balance = request.POST.get('balance', 10000)
@@ -26,10 +24,8 @@ def create_player(request):
     return render(request, 'blackjack/create_player.html')
 
 def play_game(request, player_id):
-    """Główna funkcja gry blackjack"""
     player = get_object_or_404(Player, id=player_id)
     
-    # Sprawdź czy jest aktywna gra w session
     if 'active_game' in request.session and request.method == 'GET':
         game_data = request.session['active_game']
         return render(request, 'blackjack/game_active.html', {
@@ -39,15 +35,12 @@ def play_game(request, player_id):
         })
     
     if request.method == 'POST':
-        # Rozpoczęcie nowej gry
         if 'bet_amount' in request.POST:
             return _start_new_game(request, player)
         
-        # Akcje gracza (hit/stand/double)
         elif 'action' in request.POST:
             return _handle_player_action(request, player)
     
-    # GET - pokaż formularz zakładu
     return render(request, 'blackjack/play_game.html', {'player': player})
 
 def _start_new_game(request, player):
@@ -60,18 +53,15 @@ def _start_new_game(request, player):
             'error': 'Insufficient balance!'
         })
     
-    # Stwórz nową grę
     game = WebBlackjackGame()
     game_state = game.start_game(float(bet_amount))
     
-    # Zapisz w session
     request.session['active_game'] = {
         'game_state': game_state,
         'bet_amount': float(bet_amount),
         'game_data': game.to_dict()
     }
     
-    # Jeśli blackjack - od razu zakończ
     if game_state['status'] == 'blackjack':
         return _finish_game(request, player, game_state, bet_amount, 'blackjack', game)
     
@@ -89,11 +79,9 @@ def _handle_player_action(request, player):
     game_session = request.session['active_game']
     original_bet = Decimal(str(game_session['bet_amount']))
     
-    # Przywróć grę
     game = WebBlackjackGame()
     game.from_dict(game_session['game_data'])
     
-    # Wykonaj akcję
     result = None
     if action == 'hit':
         result = game.hit()
@@ -107,7 +95,6 @@ def _handle_player_action(request, player):
     if result is None:
         return redirect('play_game', player_id=player.id)
     
-    # ✅ Zapisz CAŁY obiekt z powrotem do sesji
     request.session['active_game'] = {
         'game_state': result,
         'bet_amount': float(original_bet),
@@ -115,11 +102,9 @@ def _handle_player_action(request, player):
     }
     request.session.modified = True   # <-- kluczowe!
     
-    # Koniec gry
     if result.get('game_over'):
         return _finish_split_game(request, player, result, original_bet, game)
     
-    # Gra trwa dalej
     return render(request, 'blackjack/game_active.html', {
         'player': player,
         'game_state': result,
@@ -132,7 +117,6 @@ def _finish_split_game(request, player, game_state, original_bet_amount, game_in
     original_bet = Decimal(str(original_bet_amount))
     total_payout = Decimal('0')
     
-    # Jeśli to split - oblicz wyniki dla każdej ręki
     if 'hand_results' in game_state:
         hand_results = game_state['hand_results']
         total_bet = sum(Decimal(str(hand['bet'])) for hand in hand_results)
@@ -143,7 +127,6 @@ def _finish_split_game(request, player, game_state, original_bet_amount, game_in
             elif hand['result'] == 'draw':
                 total_payout += Decimal(str(hand['bet']))
         
-        # Główny wynik gry
         if total_payout > total_bet:
             main_result = 'win'
         elif total_payout == total_bet:
@@ -153,10 +136,8 @@ def _finish_split_game(request, player, game_state, original_bet_amount, game_in
             
         display_bet = total_bet
     else:
-        # Pojedyncza ręka lub bust
         game_result = game_state.get('result', 'lose')
         
-        # Sprawdź czy to double down
         if 'doubled_bet' in game_state:
             bet_for_calculation = Decimal(str(game_state['doubled_bet']))
         else:
@@ -170,12 +151,10 @@ def _finish_split_game(request, player, game_state, original_bet_amount, game_in
         main_result = game_result
         display_bet = bet_for_calculation
     
-    # Aktualizuj balans gracza
     balance_change = total_payout - display_bet
     player.balance += balance_change
     player.save()
     
-    # Zapisz grę do bazy danych
     Game.objects.create(
         player=player,
         bet_amount=display_bet,
@@ -185,7 +164,6 @@ def _finish_split_game(request, player, game_state, original_bet_amount, game_in
         payout=total_payout
     )
     
-    # Usuń grę z session
     if 'active_game' in request.session:
         del request.session['active_game']
     
@@ -199,8 +177,6 @@ def _finish_split_game(request, player, game_state, original_bet_amount, game_in
     })
 
 def _finish_game(request, player, game_state, bet_amount, game_result, game_instance):
-    """Kończy grę i zapisuje wyniki"""
-    # Oblicz wypłatę
     payout = Decimal('0')
     if game_result == 'win':
         payout = bet_amount * 2
@@ -209,12 +185,10 @@ def _finish_game(request, player, game_state, bet_amount, game_result, game_inst
     elif game_result == 'draw':
         payout = bet_amount
     
-    # Aktualizuj balans gracza
     balance_change = payout - bet_amount
     player.balance += balance_change
     player.save()
     
-    # Zapisz grę do bazy danych
     Game.objects.create(
         player=player,
         bet_amount=bet_amount,
@@ -224,7 +198,6 @@ def _finish_game(request, player, game_state, bet_amount, game_result, game_inst
         payout=payout
     )
     
-    # Usuń grę z session
     if 'active_game' in request.session:
         del request.session['active_game']
     
@@ -236,11 +209,9 @@ def _finish_game(request, player, game_state, bet_amount, game_result, game_inst
         'bet_amount': bet_amount
     })
 def play_roulette(request, player_id):
-    """Główna funkcja gry ruletka"""
     player = get_object_or_404(Player, id=player_id)
     roulette = RouletteGame()
     
-    # Sprawdź czy są aktywne zakłady w session
     if 'roulette_bets' in request.session and request.method == 'GET':
         bets = request.session['roulette_bets']
         return render(request, 'blackjack/roulette_betting.html', {
@@ -251,19 +222,15 @@ def play_roulette(request, player_id):
         })
     
     if request.method == 'POST':
-        # Dodawanie zakładu
         if 'add_bet' in request.POST:
             return _add_roulette_bet(request, player, roulette)
         
-        # Usuwanie zakładu
         elif 'remove_bet' in request.POST:
             return _remove_roulette_bet(request, player)
         
-        # Granie (spin)
         elif 'spin' in request.POST:
             return _spin_roulette(request, player, roulette)
     
-    # GET - początkowy formularz
     return render(request, 'blackjack/roulette_betting.html', {
         'player': player,
         'bet_types': roulette.get_bet_types(),
@@ -277,7 +244,6 @@ def _add_roulette_bet(request, player, roulette):
     bet_amount = Decimal(request.POST.get('bet_amount', '0'))
     bet_number = request.POST.get('bet_number')
     
-    # Walidacja
     if bet_amount <= 0 or bet_amount > player.balance:
         return render(request, 'blackjack/roulette_betting.html', {
             'player': player,
@@ -287,7 +253,6 @@ def _add_roulette_bet(request, player, roulette):
             'error': 'Invalid bet amount!'
         })
     
-    # Sprawdź numer dla zakładu na konkretny numer
     if bet_type == 'number':
         try:
             bet_number = int(bet_number)
@@ -304,7 +269,6 @@ def _add_roulette_bet(request, player, roulette):
     else:
         bet_number = None
     
-    # Dodaj zakład do sesji
     if 'roulette_bets' not in request.session:
         request.session['roulette_bets'] = []
     
@@ -369,7 +333,6 @@ def _spin_roulette(request, player, roulette):
     bets_data = request.session['roulette_bets']
     total_bet_amount = sum(Decimal(str(bet['amount'])) for bet in bets_data)
     
-    # Sprawdź czy gracz ma wystarczający balans
     if total_bet_amount > player.balance:
         return render(request, 'blackjack/roulette_betting.html', {
             'player': player,
@@ -379,17 +342,13 @@ def _spin_roulette(request, player, roulette):
             'error': 'Insufficient balance!'
         })
     
-    # Odejmij stawkę od balansu gracza
     player.balance -= total_bet_amount
     
-    # Graj rundę
     game_result = roulette.play_round(bets_data)
     
-    # Dodaj wygraną do balansu
     player.balance += game_result['total_payout']
     player.save()
     
-    # Zapisz grę do bazy danych
     from .models import RouletteGameModel, RouletteBet
     
     roulette_game = RouletteGameModel.objects.create(
@@ -401,7 +360,6 @@ def _spin_roulette(request, player, roulette):
         bets_data=bets_data
     )
     
-    # Zapisz poszczególne zakłady
     for bet_result in game_result['bet_results']:
         RouletteBet.objects.create(
             game=roulette_game,
@@ -412,7 +370,6 @@ def _spin_roulette(request, player, roulette):
             payout=bet_result['payout']
         )
     
-    # Usuń zakłady z sesji
     del request.session['roulette_bets']
     
     return render(request, 'blackjack/roulette_result.html', {

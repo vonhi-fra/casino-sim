@@ -8,7 +8,6 @@ class RouletteGame:
         self.green_number = 0
         
     def get_bet_types(self):
-        """Zwraca dostępne typy zakładów"""
         return {
             'red': {'name': 'Red', 'payout': 2, 'description': 'Red numbers'},
             'black': {'name': 'Black', 'payout': 2, 'description': 'Black numbers'},
@@ -20,11 +19,9 @@ class RouletteGame:
         }
     
     def spin(self):
-        """Wykonuje obrót ruletki"""
         return random.randint(0, 36)
     
     def get_number_color(self, number):
-        """Zwraca kolor numeru"""
         if number == 0:
             return 'green'
         elif number in self.red_numbers:
@@ -33,7 +30,6 @@ class RouletteGame:
             return 'black'
     
     def check_bet(self, bet_type, bet_number, winning_number):
-        """Sprawdza czy zakład wygrał"""
         if bet_type == 'red':
             return winning_number in self.red_numbers
         elif bet_type == 'black':
@@ -52,7 +48,6 @@ class RouletteGame:
         return False
     
     def calculate_payout(self, bet_amount, bet_type, won):
-        """Oblicza wypłatę"""
         if not won:
             return Decimal('0')
         
@@ -61,10 +56,7 @@ class RouletteGame:
         return Decimal(str(bet_amount)) * multiplier
     
     def play_round(self, bets_data):
-        """
-        Gra rundę ruletki z wieloma zakładami
-        bets_data: lista słowników [{'type': 'red', 'amount': 100, 'number': None}, ...]
-        """
+
         winning_number = self.spin()
         winning_color = self.get_number_color(winning_number)
         
