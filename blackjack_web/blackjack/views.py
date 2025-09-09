@@ -4,6 +4,7 @@ from .models import Player, Game
 from core.blackjack.game import WebBlackjackGame
 from decimal import Decimal
 import json
+from core.roulette.game import RouletteGame
 
 def home(request):
     """Strona główna - lista graczy"""
@@ -233,4 +234,189 @@ def _finish_game(request, player, game_state, bet_amount, game_result, game_inst
         'result': game_result,
         'payout': payout,
         'bet_amount': bet_amount
+    })
+def play_roulette(request, player_id):
+    """Główna funkcja gry ruletka"""
+    player = get_object_or_404(Player, id=player_id)
+    roulette = RouletteGame()
+    
+    # Sprawdź czy są aktywne zakłady w session
+    if 'roulette_bets' in request.session and request.method == 'GET':
+        bets = request.session['roulette_bets']
+        return render(request, 'blackjack/roulette_betting.html', {
+            'player': player,
+            'bet_types': roulette.get_bet_types(),
+            'current_bets': bets,
+            'total_bet': sum(bet['amount'] for bet in bets)
+        })
+    
+    if request.method == 'POST':
+        # Dodawanie zakładu
+        if 'add_bet' in request.POST:
+            return _add_roulette_bet(request, player, roulette)
+        
+        # Usuwanie zakładu
+        elif 'remove_bet' in request.POST:
+            return _remove_roulette_bet(request, player)
+        
+        # Granie (spin)
+        elif 'spin' in request.POST:
+            return _spin_roulette(request, player, roulette)
+    
+    # GET - początkowy formularz
+    return render(request, 'blackjack/roulette_betting.html', {
+        'player': player,
+        'bet_types': roulette.get_bet_types(),
+        'current_bets': [],
+        'total_bet': 0
+    })
+
+def _add_roulette_bet(request, player, roulette):
+    """Dodaje zakład do sesji"""
+    bet_type = request.POST.get('bet_type')
+    bet_amount = Decimal(request.POST.get('bet_amount', '0'))
+    bet_number = request.POST.get('bet_number')
+    
+    # Walidacja
+    if bet_amount <= 0 or bet_amount > player.balance:
+        return render(request, 'blackjack/roulette_betting.html', {
+            'player': player,
+            'bet_types': roulette.get_bet_types(),
+            'current_bets': request.session.get('roulette_bets', []),
+            'total_bet': sum(bet['amount'] for bet in request.session.get('roulette_bets', [])),
+            'error': 'Invalid bet amount!'
+        })
+    
+    # Sprawdź numer dla zakładu na konkretny numer
+    if bet_type == 'number':
+        try:
+            bet_number = int(bet_number)
+            if bet_number < 0 or bet_number > 36:
+                raise ValueError
+        except (ValueError, TypeError):
+            return render(request, 'blackjack/roulette_betting.html', {
+                'player': player,
+                'bet_types': roulette.get_bet_types(),
+                'current_bets': request.session.get('roulette_bets', []),
+                'total_bet': sum(bet['amount'] for bet in request.session.get('roulette_bets', [])),
+                'error': 'Number must be between 0 and 36!'
+            })
+    else:
+        bet_number = None
+    
+    # Dodaj zakład do sesji
+    if 'roulette_bets' not in request.session:
+        request.session['roulette_bets'] = []
+    
+    new_bet = {
+        'type': bet_type,
+        'amount': float(bet_amount),
+        'number': bet_number,
+        'display_name': roulette.get_bet_types()[bet_type]['name']
+    }
+    
+    if bet_type == 'number':
+        new_bet['display_name'] = f"Number {bet_number}"
+    
+    request.session['roulette_bets'].append(new_bet)
+    request.session.modified = True
+    
+    current_bets = request.session['roulette_bets']
+    total_current_bet = sum(bet['amount'] for bet in current_bets)
+    
+    return render(request, 'blackjack/roulette_betting.html', {
+        'player': player,
+        'bet_types': roulette.get_bet_types(),
+        'current_bets': current_bets,
+        'total_bet': total_current_bet,
+        'success': f'Added ${bet_amount} bet on {new_bet["display_name"]}'
+    })
+
+def _remove_roulette_bet(request, player):
+    """Usuwa zakład z sesji"""
+    bet_index = int(request.POST.get('bet_index', -1))
+    
+    if 'roulette_bets' in request.session and 0 <= bet_index < len(request.session['roulette_bets']):
+        removed_bet = request.session['roulette_bets'].pop(bet_index)
+        request.session.modified = True
+        
+        success_msg = f'Removed ${removed_bet["amount"]} bet on {removed_bet["display_name"]}'
+    else:
+        success_msg = None
+    
+    roulette = RouletteGame()
+    current_bets = request.session.get('roulette_bets', [])
+    
+    return render(request, 'blackjack/roulette_betting.html', {
+        'player': player,
+        'bet_types': roulette.get_bet_types(),
+        'current_bets': current_bets,
+        'total_bet': sum(bet['amount'] for bet in current_bets),
+        'success': success_msg
+    })
+
+def _spin_roulette(request, player, roulette):
+    """Wykonuje spin ruletki"""
+    if 'roulette_bets' not in request.session or not request.session['roulette_bets']:
+        return render(request, 'blackjack/roulette_betting.html', {
+            'player': player,
+            'bet_types': roulette.get_bet_types(),
+            'current_bets': [],
+            'total_bet': 0,
+            'error': 'No bets placed!'
+        })
+    
+    bets_data = request.session['roulette_bets']
+    total_bet_amount = sum(Decimal(str(bet['amount'])) for bet in bets_data)
+    
+    # Sprawdź czy gracz ma wystarczający balans
+    if total_bet_amount > player.balance:
+        return render(request, 'blackjack/roulette_betting.html', {
+            'player': player,
+            'bet_types': roulette.get_bet_types(),
+            'current_bets': bets_data,
+            'total_bet': float(total_bet_amount),
+            'error': 'Insufficient balance!'
+        })
+    
+    # Odejmij stawkę od balansu gracza
+    player.balance -= total_bet_amount
+    
+    # Graj rundę
+    game_result = roulette.play_round(bets_data)
+    
+    # Dodaj wygraną do balansu
+    player.balance += game_result['total_payout']
+    player.save()
+    
+    # Zapisz grę do bazy danych
+    from .models import RouletteGameModel, RouletteBet
+    
+    roulette_game = RouletteGameModel.objects.create(
+        player=player,
+        total_bet=game_result['total_bet'],
+        winning_number=game_result['winning_number'],
+        winning_color=game_result['winning_color'],
+        total_payout=game_result['total_payout'],
+        bets_data=bets_data
+    )
+    
+    # Zapisz poszczególne zakłady
+    for bet_result in game_result['bet_results']:
+        RouletteBet.objects.create(
+            game=roulette_game,
+            bet_type=bet_result['type'],
+            bet_amount=bet_result['amount'],
+            bet_number=bet_result.get('number'),
+            won=bet_result['won'],
+            payout=bet_result['payout']
+        )
+    
+    # Usuń zakłady z sesji
+    del request.session['roulette_bets']
+    
+    return render(request, 'blackjack/roulette_result.html', {
+        'player': player,
+        'game_result': game_result,
+        'net_result': game_result['total_payout'] - game_result['total_bet']
     })

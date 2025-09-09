@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Roulette - {{ player.nickname }}</title>
+    <style>
+        body { 
+            font-family: Arial, sans-serif; 
+            margin: 0; 
+            background: linear-gradient(135deg, #8B0000, #DC143C);
+            color: white;
+            min-height: 100vh;
+        }
+        .container { max-width: 1000px; margin: 0 auto; padding: 20px; }
+        .player-info { 
+            background: rgba(255,255,255,0.1); 
+            padding: 15px; 
+            border-radius: 10px; 
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        .roulette-table { 
+            background: rgba(0,100,0,0.8); 
+            border-radius: 15px; 
+            padding: 30px; 
+            margin: 20px 0;
+            border: 5px solid gold;
+        }
+        .betting-section {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 30px;
+            margin: 20px 0;
+        }
+        .bet-options {
+            background: rgba(255,255,255,0.1);
+            padding: 20px;
+            border-radius: 10px;
+        }
+        .bet-type {
+            margin: 15px 0;
+            padding: 15px;
+            background: rgba(255,255,255,0.05);
+            border-radius: 8px;
+            border: 2px solid transparent;
+            transition: all 0.3s;
+        }
+        .bet-type:hover {
+            border-color: gold;
+            background: rgba(255,215,0,0.1);
+        }
+        .bet-type h4 {
+            margin: 0 0 10px 0;
+            color: #FFD700;
+        }
+        .bet-form {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            margin-top: 10px;
+        }
+        .bet-form input {
+            padding: 8px;
+            border: none;
+            border-radius: 5px;
+            margin-right: 5px;
+        }
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .btn-primary { background: #007bff; color: white; }
+        .btn-primary:hover { background: #0056b3; }
+        .btn-danger { background: #dc3545; color: white; }
+        .btn-danger:hover { background: #c82333; }
+        .btn-success { background: #28a745; color: white; }
+        .btn-success:hover { background: #218838; }
+        .btn-gold { background: #FFD700; color: #000; font-weight: bold; }
+        .btn-gold:hover { background: #FFA500; }
+        
+        .current-bets {
+            background: rgba(255,255,255,0.1);
+            padding: 20px;
+            border-radius: 10px;
+            min-height: 300px;
+        }
+        .bet-item {
+            background: rgba(255,255,255,0.1);
+            padding: 10px;
+            margin: 8px 0;
+            border-radius: 5px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .bet-summary {
+            background: rgba(255,215,0,0.2);
+            padding: 15px;
+            border-radius: 10px;
+            margin: 20px 0;
+            text-align: center;
+            border: 2px solid gold;
+        }
+        .message {
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 10px;
+            text-align: center;
+        }
+        .success { background: rgba(40, 167, 69, 0.3); }
+        .error { background: rgba(220, 53, 69, 0.3); }
+        
+        .roulette-wheel {
+            width: 200px;
+            height: 200px;
+            border: 10px solid gold;
+            border-radius: 50%;
+            margin: 20px auto;
+            background: conic-gradient(
+                from 0deg,
+                red 0deg 10deg,
+                black 10deg 20deg,
+                red 20deg 30deg,
+                black 30deg 40deg,
+                red 40deg 50deg,
+                black 50deg 60deg,
+                red 60deg 70deg,
+                black 70deg 80deg,
+                red 80deg 90deg,
+                black 90deg 100deg,
+                red 100deg 110deg,
+                black 110deg 120deg,
+                red 120deg 130deg,
+                black 130deg 140deg,
+                red 140deg 150deg,
+                black 150deg 160deg,
+                red 160deg 170deg,
+                black 170deg 180deg,
+                green 180deg 190deg,
+                red 190deg 200deg,
+                black 200deg 210deg,
+                red 210deg 220deg,
+                black 220deg 230deg,
+                red 230deg 240deg,
+                black 240deg 250deg,
+                red 250deg 260deg,
+                black 260deg 270deg,
+                red 270deg 280deg,
+                black 280deg 290deg,
+                red 290deg 300deg,
+                black 300deg 310deg,
+                red 310deg 320deg,
+                black 320deg 330deg,
+                red 330deg 340deg,
+                black 340deg 350deg,
+                red 350deg 360deg
+            );
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .wheel-center {
+            width: 40px;
+            height: 40px;
+            background: silver;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: black;
+        }
+        
+        .nav-links { text-align: center; margin-top: 30px; }
+        .nav-links a { color: #FFD700; text-decoration: none; margin: 0 10px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="player-info">
+            <h2>🎰 {{ player.nickname }} - Roulette</h2>
+            <p>Balance: ${{ player.balance }}</p>
+        </div>
+
+        {% if error %}
+            <div class="message error">❌ {{ error }}</div>
+        {% endif %}
+        
+        {% if success %}
+            <div class="message success">✅ {{ success }}</div>
+        {% endif %}
+
+        <div class="roulette-table">
+            <div class="roulette-wheel">
+                <div class="wheel-center">🎲</div>
+            </div>
+            
+            <div class="betting-section">
+                <!-- Bet Options -->
+                <div class="bet-options">
+                    <h3>🎯 Place Your Bets</h3>
+                    
+                    {% for bet_key, bet_info in bet_types.items %}
+                        <div class="bet-type">
+                            <h4>{{ bet_info.name }} ({{ bet_info.payout }}:1)</h4>
+                            <p style="font-size: 12px; opacity: 0.8;">{{ bet_info.description }}</p>
+                            
+                            <form method="post" class="bet-form">
+                                {% csrf_token %}
+                                <input type="hidden" name="add_bet" value="1">
+                                <input type="hidden" name="bet_type" value="{{ bet_key }}">
+                                
+                                <input type="number" name="bet_amount" placeholder="Amount" min="1" max="{{ player.balance }}" required style="width: 100px;">
+                                
+                                {% if bet_key == 'number' %}
+                                    <input type="number" name="bet_number" placeholder="Number (0-36)" min="0" max="36" required style="width: 120px;">
+                                {% endif %}
+                                
+                                <button type="submit" class="btn btn-primary">Add Bet</button>
+                            </form>
+                        </div>
+                    {% endfor %}
+                </div>
+
+                <!-- Current Bets -->
+                <div class="current-bets">
+                    <h3>💰 Your Bets</h3>
+                    
+                    {% if current_bets %}
+                        {% for bet in current_bets %}
+                            <div class="bet-item">
+                                <span>
+                                    <strong>{{ bet.display_name }}</strong><br>
+                                    <small>${{ bet.amount }}</small>
+                                </span>
+                                <form method="post" style="display: inline;">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="remove_bet" value="1">
+                                    <input type="hidden" name="bet_index" value="{{ forloop.counter0 }}">
+                                    <button type="submit" class="btn btn-danger" style="padding: 5px 10px;">Remove</button>
+                                </form>
+                            </div>
+                        {% endfor %}
+                        
+                        <div class="bet-summary">
+                            <h4>Total Bet: ${{ total_bet }}</h4>
+                            
+                            <form method="post" style="margin-top: 15px;">
+                                {% csrf_token %}
+                                <input type="hidden" name="spin" value="1">
+                                <button type="submit" class="btn btn-gold" style="font-size: 18px; padding: 15px 30px;">
+                                    🎰 SPIN THE WHEEL! 🎰
+                                </button>
+                            </form>
+                        </div>
+                    {% else %}
+                        <p style="text-align: center; opacity: 0.7; margin-top: 50px;">
+                            No bets placed yet.<br>
+                            Choose a bet type and amount above.
+                        </p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="nav-links">
+            <a href="{% url 'home' %}" class="btn btn-success">🏠 Home</a>
+            <a href="{% url 'play_game' player.id %}" class="btn btn-primary">🃏 Play Blackjack</a>
+        </div>
+    </div>
+</body>
+</html>

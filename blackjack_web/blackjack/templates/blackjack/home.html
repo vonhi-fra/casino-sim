@@ -17,15 +17,17 @@
     </div>
     
     <div class="player-list">
-        <h2>Players:</h2>
-        {% for player in players %}
-            <div class="player-item">
-                <strong>{{ player.nickname }}</strong> - Balance: ${{ player.balance }}
-                <a href="{% url 'play_game' player.id %}" class="btn" style="margin-left: 20px;">Play Game</a>
-            </div>
-        {% empty %}
-            <p>No players yet. Create one!</p>
-        {% endfor %}
+    <h2>Players:</h2>
+    {% for player in players %}
+        <div class="player-item">
+            <strong>{{ player.nickname }}</strong> - Balance: ${{ player.balance }}
+            <a href="{% url 'play_game' player.id %}" class="btn" style="margin-left: 20px;">🃏 Blackjack</a>
+            <a href="{% url 'play_roulette' player.id %}" class="btn" style="background: #dc3545;">🎰 Roulette</a>
+        </div>
+    {% empty %}
+        <p>No players yet. Create one!</p>
+    {% endfor %}
+</div>
     </div>
 </body>
 </html>
