@@ -81,15 +81,14 @@ def _start_new_game(request, player):
     })
 
 def _handle_player_action(request, player):
-    """Obsługuje akcje gracza (hit/stand/double)"""
     if 'active_game' not in request.session:
         return redirect('play_game', player_id=player.id)
     
-    action = request.POST['action']
+    action = request.POST.get('action', 'NONE')
     game_session = request.session['active_game']
-    bet_amount = Decimal(str(game_session['bet_amount']))
+    original_bet = Decimal(str(game_session['bet_amount']))
     
-    # Przywróć grę z session
+    # Przywróć grę
     game = WebBlackjackGame()
     game.from_dict(game_session['game_data'])
     
@@ -100,35 +99,102 @@ def _handle_player_action(request, player):
     elif action == 'stand':
         result = game.stand()
     elif action == 'double':
-        if bet_amount > player.balance:
-            return render(request, 'blackjack/game_active.html', {
-                'player': player,
-                'game_state': game_session['game_state'],
-                'bet_amount': bet_amount,
-                'error': 'Insufficient balance for double!'
-            })
         result = game.double_down()
-        bet_amount *= 2  # Podwój stawkę dla wypłaty
+    elif action == 'split':
+        result = game.split()
     
     if result is None:
         return redirect('play_game', player_id=player.id)
     
-    # Aktualizuj session
-    request.session['active_game']['game_state'] = result
-    request.session['active_game']['game_data'] = game.to_dict()
-    if action == 'double':
-        request.session['active_game']['bet_amount'] = float(bet_amount)
+    # ✅ Zapisz CAŁY obiekt z powrotem do sesji
+    request.session['active_game'] = {
+        'game_state': result,
+        'bet_amount': float(original_bet),
+        'game_data': game.to_dict()
+    }
+    request.session.modified = True   # <-- kluczowe!
     
-    # Jeśli gra skończona
+    # Koniec gry
     if result.get('game_over'):
-        game_result = result.get('result', 'lose')
-        return _finish_game(request, player, result, bet_amount, game_result, game)
+        return _finish_split_game(request, player, result, original_bet, game)
     
     # Gra trwa dalej
     return render(request, 'blackjack/game_active.html', {
         'player': player,
         'game_state': result,
-        'bet_amount': bet_amount
+        'bet_amount': original_bet
+    })
+
+
+def _finish_split_game(request, player, game_state, original_bet_amount, game_instance):
+    """Kończy grę ze split i oblicza wyniki dla wszystkich rąk"""
+    original_bet = Decimal(str(original_bet_amount))
+    total_payout = Decimal('0')
+    
+    # Jeśli to split - oblicz wyniki dla każdej ręki
+    if 'hand_results' in game_state:
+        hand_results = game_state['hand_results']
+        total_bet = sum(Decimal(str(hand['bet'])) for hand in hand_results)
+        
+        for hand in hand_results:
+            if hand['result'] == 'win':
+                total_payout += Decimal(str(hand['bet'])) * 2
+            elif hand['result'] == 'draw':
+                total_payout += Decimal(str(hand['bet']))
+        
+        # Główny wynik gry
+        if total_payout > total_bet:
+            main_result = 'win'
+        elif total_payout == total_bet:
+            main_result = 'draw'
+        else:
+            main_result = 'lose'
+            
+        display_bet = total_bet
+    else:
+        # Pojedyncza ręka lub bust
+        game_result = game_state.get('result', 'lose')
+        
+        # Sprawdź czy to double down
+        if 'doubled_bet' in game_state:
+            bet_for_calculation = Decimal(str(game_state['doubled_bet']))
+        else:
+            bet_for_calculation = original_bet
+            
+        if game_result == 'win':
+            total_payout = bet_for_calculation * 2
+        elif game_result == 'draw':
+            total_payout = bet_for_calculation
+        
+        main_result = game_result
+        display_bet = bet_for_calculation
+    
+    # Aktualizuj balans gracza
+    balance_change = total_payout - display_bet
+    player.balance += balance_change
+    player.save()
+    
+    # Zapisz grę do bazy danych
+    Game.objects.create(
+        player=player,
+        bet_amount=display_bet,
+        player_cards=game_state.get('all_hands', [{}])[0].get('cards', []) if game_state.get('all_hands') else game_state.get('player_cards', []),
+        dealer_cards=game_state.get('dealer_cards', []),
+        result=main_result,
+        payout=total_payout
+    )
+    
+    # Usuń grę z session
+    if 'active_game' in request.session:
+        del request.session['active_game']
+    
+    return render(request, 'blackjack/game_result.html', {
+        'player': player,
+        'game_state': game_state,
+        'result': main_result,
+        'payout': total_payout,
+        'bet_amount': display_bet,
+        'split_results': game_state.get('hand_results', [])
     })
 
 def _finish_game(request, player, game_state, bet_amount, game_result, game_instance):

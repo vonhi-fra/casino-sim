@@ -2,6 +2,7 @@ class Hand:
     """Klasa reprezentująca rękę kart"""
     
     def __init__(self, cards=None, bet=0):
+        """Inicjalizuje rękę z kartami i stawką"""
         self.cards = cards if cards is not None else []
         self.bet = bet
     
@@ -48,6 +49,17 @@ class Hand:
         if len(self.cards) != 2:
             return False
         return self.cards[0].get_symbol() == self.cards[1].get_symbol()
+    
+    def split(self):
+        """Splituje rękę na dwie osobne ręce"""
+        if not self.can_split():
+            raise ValueError("Cannot split this hand")
+        
+        # Stwórz dwie nowe ręce z jedną kartą każda
+        hand1 = Hand([self.cards[0]], self.bet)
+        hand2 = Hand([self.cards[1]], self.bet)
+        
+        return hand1, hand2
     
     def __str__(self):
         return f"Hand: {self.get_cards_display()}, Total: {self.count_hand()}, Bet: ${self.bet}"

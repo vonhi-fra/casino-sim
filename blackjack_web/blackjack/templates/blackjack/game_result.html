@@ -101,13 +101,28 @@
 
             <!-- Game Stats -->
             <div class="stats">
-                {% if game_state %}
-                    <p><strong>Your Total:</strong> {{ game_state.player_total }}</p>
+                {% if split_results %}
+                    <!-- Split results -->
+                    <h3>Split Results:</h3>
+                    {% for hand in split_results %}
+                        <div style="margin: 10px 0; padding: 10px; border: 1px solid rgba(255,255,255,0.3); border-radius: 5px;">
+                            <strong>Hand {{ hand.hand_index|add:1 }}:</strong> {{ hand.player_total }}
+                            - {% if hand.result == 'win' %}✅ WIN{% elif hand.result == 'lose' %}❌ LOSE{% else %}🤝 PUSH{% endif %}
+                            - Bet: ${{ hand.bet }}
+                        </div>
+                    {% endfor %}
                     {% if game_state.dealer_total %}
                         <p><strong>Dealer Total:</strong> {{ game_state.dealer_total }}</p>
                     {% endif %}
+                {% else %}
+                    {% if game_state %}
+                        <p><strong>Your Total:</strong> {{ game_state.player_total }}</p>
+                        {% if game_state.dealer_total %}
+                            <p><strong>Dealer Total:</strong> {{ game_state.dealer_total }}</p>
+                        {% endif %}
+                    {% endif %}
                 {% endif %}
-                <p><strong>Bet Amount:</strong> ${{ bet_amount }}</p>
+                <p><strong>Total Bet:</strong> ${{ bet_amount }}</p>
             </div>
 
             <!-- Payout Info -->
@@ -131,4 +146,10 @@
 
             <!-- Actions -->
             <div class="actions">
-                <a href="{% url 'play_game' player.id %}" class="btn btn-primary">🎰 Play Again
+                <a href="{% url 'play_game' player.id %}" class="btn btn-primary">🎰 Play Again</a>
+                <a href="{% url 'home' %}" class="btn btn-secondary">🏠 Home</a>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

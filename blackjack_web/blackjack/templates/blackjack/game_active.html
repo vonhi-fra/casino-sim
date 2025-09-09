@@ -81,6 +81,47 @@
         }
         .success { background: rgba(40, 167, 69, 0.3); }
         .error { background: rgba(220, 53, 69, 0.3); }
+        .split-hand { 
+            margin: 10px 0; 
+            padding: 15px; 
+            border: 2px solid rgba(255,255,255,0.2); 
+            border-radius: 8px; 
+        }
+        .current-hand { 
+            border-color: #ffc107; 
+            background: rgba(255,193,7,0.1); 
+        }
+        .bust-hand { 
+            border-color: #dc3545; 
+            background: rgba(220,53,69,0.1); 
+        }
+        .hand-header { 
+            font-size: 16px; 
+            margin-bottom: 10px; 
+            color: #ffc107; 
+        }
+        .split-hand { 
+            margin: 10px 0; 
+            padding: 15px; 
+            border: 2px solid rgba(255,255,255,0.2); 
+            border-radius: 8px; 
+        }
+        .current-hand { 
+            border-color: #ffc107; 
+            background: rgba(255,193,7,0.1); 
+        }
+        .bust-hand { 
+            border-color: #dc3545; 
+            background: rgba(220,53,69,0.1); 
+        }
+        .hand-header { 
+            font-size: 16px; 
+            margin-bottom: 10px; 
+            color: #ffc107; 
+        }
+        .bust-text { color: #dc3545; font-weight: bold; }
+        .btn-split { background: #6f42c1; }
+        .btn-split:hover { background: #5a32a3; }
         .nav-links { text-align: center; margin-top: 20px; }
         .nav-links a { color: #ffc107; text-decoration: none; }
     </style>
@@ -116,15 +157,36 @@
                 </div>
             </div>
 
-            <!-- Player's Hand -->
+            <!-- Player's Hand(s) -->
             <div class="hand">
-                <h3>🎲 Your Hand</h3>
-                <div class="cards">
-                    {% for card in game_state.player_cards %}
-                        <span class="card">{{ card }}</span>
+                <h3>🎲 Your Hand{% if game_state.split_mode %}s{% endif %}</h3>
+                
+                {% if game_state.split_mode and game_state.all_hands %}
+                    <!-- Split mode - pokaż wszystkie ręce -->
+                    {% for hand in game_state.all_hands %}
+                        <div class="split-hand {% if hand.is_current %}current-hand{% endif %} {% if hand.is_bust %}bust-hand{% endif %}">
+                            <div class="hand-header">
+                                <strong>Hand {{ hand.index|add:1 }}{% if hand.is_current %} (Current){% endif %}</strong>
+                                - Bet: ${{ hand.bet }}
+                                {% if hand.is_bust %}<span class="bust-text"> - BUST</span>{% endif %}
+                            </div>
+                            <div class="cards">
+                                {% for card in hand.cards %}
+                                    <span class="card">{{ card }}</span>
+                                {% endfor %}
+                            </div>
+                            <div class="total">Total: {{ hand.total }}</div>
+                        </div>
                     {% endfor %}
-                </div>
-                <div class="total">Total: {{ game_state.player_total }}</div>
+                {% else %}
+                    <!-- Single hand -->
+                    <div class="cards">
+                        {% for card in game_state.player_cards %}
+                            <span class="card">{{ card }}</span>
+                        {% endfor %}
+                    </div>
+                    <div class="total">Total: {{ game_state.player_total }}</div>
+                {% endif %}
                 
                 {% if game_state.new_card %}
                     <div style="color: #28a745; margin-top: 10px;">
@@ -165,8 +227,18 @@
         {% endif %}
 
         <!-- Action Buttons -->
-        {% if game_state.status == 'playing' %}
+        <div style="font-size: 12px; color: #ccc; margin: 10px 0;">
+            DEBUG: Status={{ game_state.status }}, Can Split={{ game_state.can_split }}, Split Mode={{ game_state.split_mode }}
+        </div>
+        
+        {% if game_state.status == 'playing' or game_state.status == 'split_done' or game_state.status == 'next_hand' or game_state.status == 'hand_bust_next' %}
             <div class="actions">
+                {% if game_state.split_mode %}
+                    <p style="color: #ffc107; margin-bottom: 15px;">
+                        Playing Hand {{ game_state.current_hand|add:1 }} of {{ game_state.total_hands }}
+                    </p>
+                {% endif %}
+                
                 <form method="post" style="display: inline;">
                     {% csrf_token %}
                     <input type="hidden" name="action" value="hit">
@@ -185,6 +257,17 @@
                     <input type="hidden" name="action" value="double">
                     <button type="submit" class="btn btn-double">⚡ Double Down</button>
                 </form>
+                {% endif %}
+                
+                {% if game_state.can_split %}
+                <form method="post" style="display: inline;">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="split">
+                    <button type="submit" class="btn btn-split">✂️ Split (Need ${{ bet_amount }})</button>
+                </form>
+                <div style="font-size: 12px; color: #ccc; margin-top: 5px;">
+                    Debug: Balance=${{ player.balance }}, Bet=${{ bet_amount }}, Can split={{ game_state.can_split }}
+                </div>
                 {% endif %}
             </div>
         {% endif %}
