@@ -1,5 +1,4 @@
 class Hand:
-    """Klasa reprezentująca rękę kart"""
     
     def __init__(self, cards=None, bet=0):
         self.cards = cards if cards is not None else []
