@@ -297,7 +297,6 @@ class WebBlackjackGame:
         }
     
     def from_dict(self, data):
-        """Przywraca stan gry ze słownika (z Django sessions)"""
         print(f"DEBUG from_dict: data keys = {data.keys()}")
         print(f"DEBUG from_dict: player_hands data = {data.get('player_hands', [])}")
         

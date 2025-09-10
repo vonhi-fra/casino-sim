@@ -44,7 +44,6 @@ def play_game(request, player_id):
     return render(request, 'blackjack/play_game.html', {'player': player})
 
 def _start_new_game(request, player):
-    """Rozpoczyna nową grę blackjack"""
     bet_amount = Decimal(request.POST['bet_amount'])
     
     if bet_amount > player.balance:
@@ -113,7 +112,6 @@ def _handle_player_action(request, player):
 
 
 def _finish_split_game(request, player, game_state, original_bet_amount, game_instance):
-    """Kończy grę ze split i oblicza wyniki dla wszystkich rąk"""
     original_bet = Decimal(str(original_bet_amount))
     total_payout = Decimal('0')
     
@@ -181,7 +179,7 @@ def _finish_game(request, player, game_state, bet_amount, game_result, game_inst
     if game_result == 'win':
         payout = bet_amount * 2
     elif game_result == 'blackjack':
-        payout = bet_amount + (bet_amount * Decimal('1.5'))  # 3:2 za blackjack
+        payout = bet_amount + (bet_amount * Decimal('1.5'))
     elif game_result == 'draw':
         payout = bet_amount
     
@@ -239,7 +237,6 @@ def play_roulette(request, player_id):
     })
 
 def _add_roulette_bet(request, player, roulette):
-    """Dodaje zakład do sesji"""
     bet_type = request.POST.get('bet_type')
     bet_amount = Decimal(request.POST.get('bet_amount', '0'))
     bet_number = request.POST.get('bet_number')
@@ -297,7 +294,6 @@ def _add_roulette_bet(request, player, roulette):
     })
 
 def _remove_roulette_bet(request, player):
-    """Usuwa zakład z sesji"""
     bet_index = int(request.POST.get('bet_index', -1))
     
     if 'roulette_bets' in request.session and 0 <= bet_index < len(request.session['roulette_bets']):
@@ -320,7 +316,6 @@ def _remove_roulette_bet(request, player):
     })
 
 def _spin_roulette(request, player, roulette):
-    """Wykonuje spin ruletki"""
     if 'roulette_bets' not in request.session or not request.session['roulette_bets']:
         return render(request, 'blackjack/roulette_betting.html', {
             'player': player,
