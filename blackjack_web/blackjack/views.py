@@ -99,7 +99,7 @@ def _handle_player_action(request, player):
         'bet_amount': float(original_bet),
         'game_data': game.to_dict()
     }
-    request.session.modified = True   # <-- kluczowe!
+    request.session.modified = True
     
     if result.get('game_over'):
         return _finish_split_game(request, player, result, original_bet, game)

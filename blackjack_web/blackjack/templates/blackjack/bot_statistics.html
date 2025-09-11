@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Bot Statistics - {{ player.nickname }}</title>
+    <style>
+        body { 
+            font-family: Arial, sans-serif; 
+            margin: 0; 
+            background: linear-gradient(135deg, #1a1a1a, #2d1b69);
+            color: white;
+            min-height: 100vh;
+        }
+        .container { 
+            max-width: 1000px; 
+            margin: 0 auto; 
+            padding: 20px; 
+        }
+        .player-info { 
+            background: rgba(255,255,255,0.1); 
+            padding: 20px; 
+            border-radius: 10px; 
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        .bot-header {
+            background: rgba(45,27,105,0.4);
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+            border: 2px solid #6c5ce7;
+            text-align: center;
+        }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin: 30px 0;
+        }
+        .stat-card {
+            background: rgba(255,255,255,0.05);
+            padding: 20px;
+            border-radius: 15px;
+            border: 2px solid;
+            text-align: center;
+        }
+        .stat-card.positive { border-color: #28a745; }
+        .stat-card.negative { border-color: #dc3545; }
+        .stat-card.neutral { border-color: #6c757d; }
+        .stat-card.special { border-color: #ffd700; }
+        
+        .stat-value {
+            font-size: 2em;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+        .stat-label {
+            font-size: 1.1em;
+            opacity: 0.8;
+        }
+        .stat-positive { color: #28a745; }
+        .stat-negative { color: #dc3545; }
+        .stat-neutral { color: #6c757d; }
+        .stat-special { color: #ffd700; }
+        
+        .games-history {
+            background: rgba(255,255,255,0.05);
+            padding: 20px;
+            border-radius: 15px;
+            margin: 30px 0;
+        }
+        .game-item {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr 1fr;
+            gap: 15px;
+            padding: 15px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            align-items: center;
+        }
+        .game-header {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr 1fr;
+            gap: 15px;
+            padding: 15px;
+            background: rgba(45,27,105,0.3);
+            border-radius: 10px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        .result-win { color: #28a745; }
+        .result-lose { color: #dc3545; }
+        .result-draw { color: #ffc107; }
+        .result-blackjack { color: #ffd700; }
+        
+        .no-stats {
+            text-align: center;
+            padding: 50px;
+            opacity: 0.7;
+        }
+        
+        .actions {
+            text-align: center;
+            margin: 30px 0;
+        }
+        .btn {
+            padding: 15px 25px;
+            margin: 10px;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+            transition: all 0.3s;
+            font-weight: bold;
+        }
+        .btn-primary { 
+            background: linear-gradient(45deg, #6c5ce7, #a29bfe); 
+            color: white; 
+        }
+        .btn-primary:hover { 
+            background: linear-gradient(45deg, #5f4fcf, #8b7ed8); 
+            transform: translateY(-2px);
+        }
+        .btn-secondary { 
+            background: #6c757d; 
+            color: white; 
+        }
+        .btn-secondary:hover { 
+            background: #545b62; 
+        }
+        
+        h1, h2, h3 { color: #a29bfe; }
+        
+        .performance-indicator {
+            font-size: 3em;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="player-info">
+            <h2>{{ player.nickname }}</h2>
+            <p>Current Balance: ${{ player.balance }}</p>
+        </div>
+        
+        <div class="bot-header">
+            <h1>🤖 Bot Performance Statistics</h1>
+            <p>Advanced AI analytical report</p>
+        </div>
+        
+        {% if stats %}
+            <div class="stats-grid">
+                <div class="stat-card neutral">
+                    <div class="stat-value stat-neutral">{{ stats.total_games }}</div>
+                    <div class="stat-label">Total Games Played</div>
+                </div>
+                
+                <div class="stat-card {% if stats.win_rate >= 45 %}positive{% elif stats.win_rate >= 35 %}neutral{% else %}negative{% endif %}">
+                    <div class="stat-value {% if stats.win_rate >= 45 %}stat-positive{% elif stats.win_rate >= 35 %}stat-neutral{% else %}stat-negative{% endif %}">
+                        {{ stats.win_rate }}%
+                    </div>
+                    <div class="stat-label">Win Rate</div>
+                </div>
+                
+                <div class="stat-card {% if stats.net_result > 0 %}positive{% elif stats.net_result == 0 %}neutral{% else %}negative{% endif %}">
+                    <div class="stat-value {% if stats.net_result > 0 %}stat-positive{% elif stats.net_result == 0 %}stat-neutral{% else %}stat-negative{% endif %}">
+                        ${{ stats.net_result }}
+                    </div>
+                    <div class="stat-label">Net Result</div>
+                </div>
+                
+                <div class="stat-card special">
+                    <div class="stat-value stat-special">{{ stats.blackjacks }}</div>
+                    <div class="stat-label">Blackjacks</div>
+                </div>
+                
+                <div class="stat-card positive">
+                    <div class="stat-value stat-positive">{{ stats.wins }}</div>
+                    <div class="stat-label">Wins</div>
+                </div>
+                
+                <div class="stat-card negative">
+                    <div class="stat-value stat-negative">{{ stats.losses }}</div>
+                    <div class="stat-label">Losses</div>
+                </div>
+                
+                <div class="stat-card neutral">
+                    <div class="stat-value stat-neutral">{{ stats.draws }}</div>
+                    <div class="stat-label">Pushes</div>
+                </div>
+                
+                <div class="stat-card neutral">
+                    <div class="stat-value stat-neutral">${{ stats.avg_bet }}</div>
+                    <div class="stat-label">Average Bet</div>
+                </div>
+            </div>
+            
+            <div class="bot-header" style="margin-top: 40px;">
+                <div class="performance-indicator">
+                    {% if stats.win_rate >= 50 %}
+                        🏆
+                    {% elif stats.win_rate >= 45 %}
+                        📈
+                    {% elif stats.win_rate >= 40 %}
+                        📊
+                    {% elif stats.win_rate >= 35 %}
+                        📉
+                    {% else %}
+                        🔍
+                    {% endif %}
+                </div>
+                <h3>Bot Performance Analysis</h3>
+                {% if stats.win_rate >= 50 %}
+                    <p>🤖 Exceptional performance! Bot is crushing the house edge.</p>
+                {% elif stats.win_rate >= 45 %}
+                    <p>🤖 Great performance! Bot is playing near-optimal strategy.</p>
+                {% elif stats.win_rate >= 40 %}
+                    <p>🤖 Good performance! Strategy is working as expected.</p>
+                {% elif stats.win_rate >= 35 %}
+                    <p>🤖 Acceptable performance! Some variance is normal.</p>
+                {% else %}
+                    <p>🤖 Below expected performance. May need more games for accuracy.</p>
+                {% endif %}
+            </div>
+            
+            {% if games %}
+            <div class="games-history">
+                <h3>📊 Recent Games History</h3>
+                <div class="game-header">
+                    <div>Date</div>
+                    <div>Bet</div>
+                    <div>Result</div>
+                    <div>Payout</div>
+                </div>
+                {% for game in games %}
+                <div class="game-item">
+                    <div>{{ game.created_at|date:"M d, H:i" }}</div>
+                    <div>${{ game.bet_amount }}</div>
+                    <div class="result-{{ game.result }}">{{ game.result|upper }}</div>
+                    <div>${{ game.payout }}</div>
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+            
+        {% else %}
+            <div class="no-stats">
+                <div class="performance-indicator">🤖</div>
+                <h3>No Games Yet</h3>
+                <p>Bot hasn't played any games yet. Start playing to see statistics!</p>
+            </div>
+        {% endif %}
+        
+        <div class="actions">
+            <a href="{% url 'bot_play' player.id %}" class="btn btn-primary">🤖 Play Bot Game</a>
+            <a href="{% url 'home' %}" class="btn btn-secondary">🏠 Home</a>
+        </div>
+    </div>
+</body>
+</html>

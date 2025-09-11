@@ -1,8 +1,7 @@
-<!-- blackjack_web/blackjack/templates/blackjack/bot_setup.html -->
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Blackjack Bot - {{ player.nickname }}</title>
+    <title>Multi-Bot - {{ player.nickname }}</title>
     <style>
         body { 
             font-family: Arial, sans-serif; 
@@ -29,34 +28,21 @@
             border-radius: 15px; 
             margin: 20px 0;
             border: 2px solid #6c5ce7;
+            text-align: center;
         }
         .bot-icon {
             font-size: 4em;
-            text-align: center;
             margin-bottom: 20px;
         }
-        .feature-list {
-            list-style: none;
-            padding: 0;
-            margin: 20px 0;
-        }
-        .feature-list li {
-            padding: 10px 0;
-            border-bottom: 1px solid rgba(255,255,255,0.1);
-        }
-        .feature-list li:before {
-            content: "🤖";
-            margin-right: 10px;
-        }
-        .bet-form {
+        .multi-form {
             background: rgba(255,255,255,0.05);
-            padding: 20px;
-            border-radius: 10px;
+            padding: 30px;
+            border-radius: 15px;
             margin: 20px 0;
         }
         input {
             width: 100%;
-            padding: 12px;
+            padding: 15px;
             margin: 10px 0;
             border: none;
             border-radius: 8px;
@@ -75,28 +61,28 @@
             color: rgba(255,255,255,0.5);
         }
         .btn {
-            padding: 15px 30px;
-            margin: 10px;
+            width: 100%;
+            padding: 18px;
+            margin: 20px 0 10px 0;
             border: none;
             border-radius: 10px;
-            font-size: 16px;
+            font-size: 18px;
             cursor: pointer;
-            text-decoration: none;
-            display: inline-block;
-            transition: all 0.3s;
             font-weight: bold;
+            transition: all 0.3s;
+            background: linear-gradient(45deg, #e67e22, #f39c12);
+            color: white;
         }
-        .btn-primary { 
-            background: linear-gradient(45deg, #6c5ce7, #a29bfe); 
-            color: white; 
-        }
-        .btn-primary:hover { 
-            background: linear-gradient(45deg, #5f4fcf, #8b7ed8); 
+        .btn:hover {
+            background: linear-gradient(45deg, #d35400, #e67e22);
             transform: translateY(-2px);
         }
         .btn-secondary { 
             background: #6c757d; 
-            color: white; 
+            width: auto;
+            display: inline-block;
+            padding: 12px 20px;
+            margin: 5px;
         }
         .btn-secondary:hover { 
             background: #545b62; 
@@ -122,6 +108,12 @@
         h1, h2, h3 { 
             color: #a29bfe; 
         }
+        .help-text {
+            font-size: 0.9em;
+            opacity: 0.8;
+            margin-top: 5px;
+            line-height: 1.3;
+        }
     </style>
 </head>
 <body>
@@ -137,50 +129,53 @@
 
         <div class="bot-card">
             <div class="bot-icon">🤖</div>
-            <h1 class="text-center">Blackjack Bot</h1>
-            <p class="text-center" style="font-size: 1.2em; opacity: 0.9;">
-                Matematycznie optymalna strategia gry
+            <h1>Multi-Bot Blackjack</h1>
+            <p style="font-size: 1.2em; opacity: 0.9;">
+                Automatyczne rozegranie wielu gier z optymalną strategią
             </p>
-            
-            <ul class="feature-list">
-                <li><strong>Basic Strategy</strong> - Probabilistyczne kalkulacje dla każdej sytuacji</li>
-                <li><strong>Automatic Play</strong> - Bot rozgrywa całą rękę automatycznie</li>
-                <li><strong>Smart Betting</strong> - Zarządzanie bankrollem</li>
-                <li><strong>Split & Double</strong> - Zaawansowane techniki</li>
-                <li><strong>Detailed Analysis</strong> - Wyjaśnienie każdej decyzji</li>
-            </ul>
         </div>
 
-        <div class="bet-form">
-            <h3>🎯 Ustawienia Gry</h3>
+        <div class="multi-form">
+            <h3>⚡ Multi-Game Configuration</h3>
             
             {% if suggested_bet %}
             <div class="suggestion">
                 💡 <strong>Rekomendowany zakład:</strong> ${{ suggested_bet }}
-                <br><small>Bot sugeruje 2% Twojego balansu</small>
+                <br><small>Bot sugeruje 2% Twojego balansu na grę</small>
             </div>
             {% endif %}
-
+            
             <form method="post">
                 {% csrf_token %}
                 <div>
-                    <label><strong>Kwota zakładu:</strong></label>
+                    <label><strong>Liczba gier:</strong></label>
+                    <input type="number" name="num_games" 
+                           value="10" min="1" max="1000" 
+                           placeholder="Ile gier zagrać automatycznie" required>
+                    <div class="help-text">
+                        Bot zagra od 1 do 1000 gier z matematycznie optymalną strategią
+                    </div>
+                </div>
+                
+                <div>
+                    <label><strong>Zakład na grę:</strong></label>
                     <input type="number" name="bet_amount" 
                            value="{{ suggested_bet|default:100 }}" 
                            min="1" max="{{ player.balance }}" 
-                           placeholder="Wprowadź kwotę zakładu" required>
+                           placeholder="Kwota na każdą grę" required>
+                    <div class="help-text">
+                        Każda gra będzie miała ten sam początkowy zakład
+                    </div>
                 </div>
                 
-                <div class="text-center" style="margin-top: 25px;">
-                    <button type="submit" name="start_bot" class="btn btn-primary">
-                        🤖 Uruchom Bota
-                    </button>
-                </div>
+                <button type="submit" class="btn">
+                    ⚡ Uruchom Multi-Bot
+                </button>
             </form>
         </div>
 
         <div class="text-center">
-            <a href="{% url 'play_game' player.id %}" class="btn btn-secondary">🎮 Graj Sam</a>
+            <a href="{% url 'bot_statistics' player.id %}" class="btn btn-secondary">📊 Statistics</a>
             <a href="{% url 'home' %}" class="btn btn-secondary">🏠 Home</a>
         </div>
     </div>

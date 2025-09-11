@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Multi-Bot Results - {{ player.nickname }}</title>
+    <style>
+        body { 
+            font-family: Arial, sans-serif; 
+            margin: 0; 
+            background: linear-gradient(135deg, #1a1a1a, #2d1b69);
+            color: white;
+            min-height: 100vh;
+        }
+        .container { 
+            max-width: 1200px; 
+            margin: 0 auto; 
+            padding: 20px; 
+        }
+        .player-info { 
+            background: rgba(255,255,255,0.1); 
+            padding: 20px; 
+            border-radius: 10px; 
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        .bot-header {
+            background: rgba(45,27,105,0.4);
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+            border: 2px solid #6c5ce7;
+            text-align: center;
+        }
+        .session-summary {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin: 30px 0;
+        }
+        .summary-card {
+            background: rgba(255,255,255,0.05);
+            padding: 20px;
+            border-radius: 15px;
+            border: 2px solid;
+            text-align: center;
+        }
+        .summary-card.positive { border-color: #28a745; }
+        .summary-card.negative { border-color: #dc3545; }
+        .summary-card.neutral { border-color: #6c757d; }
+        .summary-card.special { border-color: #ffd700; }
+        
+        .summary-value {
+            font-size: 2em;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+        .summary-label {
+            font-size: 1.1em;
+            opacity: 0.8;
+        }
+        .value-positive { color: #28a745; }
+        .value-negative { color: #dc3545; }
+        .value-neutral { color: #6c757d; }
+        .value-special { color: #ffd700; }
+        
+        .performance-indicator {
+            font-size: 4em;
+            margin: 20px 0;
+        }
+        
+        .games-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 15px;
+            margin: 30px 0;
+            max-height: 600px;
+            overflow-y: auto;
+        }
+        
+        .game-card {
+            background: rgba(255,255,255,0.05);
+            padding: 15px;
+            border-radius: 10px;
+            border-left: 4px solid;
+            font-size: 0.9em;
+        }
+        .game-card.win { border-left-color: #28a745; }
+        .game-card.lose { border-left-color: #dc3545; }
+        .game-card.draw { border-left-color: #ffc107; }
+        .game-card.blackjack { border-left-color: #ffd700; }
+        
+        .game-header {
+            font-weight: bold;
+            margin-bottom: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .game-details {
+            font-size: 0.85em;
+            opacity: 0.8;
+            line-height: 1.4;
+        }
+        
+        .actions {
+            text-align: center;
+            margin: 30px 0;
+        }
+        .btn {
+            padding: 15px 25px;
+            margin: 10px;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+            transition: all 0.3s;
+            font-weight: bold;
+        }
+        .btn-primary { 
+            background: linear-gradient(45deg, #6c5ce7, #a29bfe); 
+            color: white; 
+        }
+        .btn-primary:hover { 
+            background: linear-gradient(45deg, #5f4fcf, #8b7ed8); 
+            transform: translateY(-2px);
+        }
+        .btn-secondary { 
+            background: #6c757d; 
+            color: white; 
+        }
+        .btn-secondary:hover { 
+            background: #545b62; 
+        }
+        .btn-warning { 
+            background: #f39c12; 
+            color: white; 
+        }
+        .btn-warning:hover { 
+            background: #e67e22; 
+        }
+        
+        h1, h2, h3 { color: #a29bfe; }
+        
+        .balance-change {
+            font-size: 1.5em;
+            font-weight: bold;
+            padding: 20px;
+            border-radius: 15px;
+            margin: 20px 0;
+            text-align: center;
+        }
+        .balance-positive {
+            background: rgba(40, 167, 69, 0.3);
+            color: #28a745;
+            border: 2px solid #28a745;
+        }
+        .balance-negative {
+            background: rgba(220, 53, 69, 0.3);
+            color: #dc3545;
+            border: 2px solid #dc3545;
+        }
+        .balance-neutral {
+            background: rgba(108, 117, 125, 0.3);
+            color: #6c757d;
+            border: 2px solid #6c757d;
+        }
+        
+        .quick-stats {
+            background: rgba(255,255,255,0.05);
+            padding: 20px;
+            border-radius: 15px;
+            margin: 20px 0;
+        }
+        
+        .moves-summary {
+            background: rgba(255,255,255,0.02);
+            padding: 10px;
+            border-radius: 5px;
+            margin-top: 8px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="player-info">
+            <h2>{{ player.nickname }}</h2>
+            <p>New Balance: ${{ player.balance }}</p>
+        </div>
+        
+        <div class="bot-header">
+            <div class="performance-indicator">
+                {% if session_stats.win_rate >= 50 %}🏆{% elif session_stats.win_rate >= 45 %}📈{% elif session_stats.win_rate >= 40 %}📊{% else %}📉{% endif %}
+            </div>
+            <h1>⚡ Multi-Bot Session Complete</h1>
+            <p>{{ session_stats.games_played }} games played automatically</p>
+        </div>
+        
+        <!-- Balance Change Summary -->
+        <div class="balance-change {% if session_stats.balance_change > 0 %}balance-positive{% elif session_stats.balance_change < 0 %}balance-negative{% else %}balance-neutral{% endif %}">
+            {% if session_stats.balance_change > 0 %}
+                🤖💰 Bot won: +${{ session_stats.balance_change }}
+            {% elif session_stats.balance_change < 0 %}
+                🤖💸 Bot lost: ${{ session_stats.balance_change|floatformat:0 }}
+            {% else %}
+                🤖💼 Bot broke even: $0
+            {% endif %}
+        </div>
+        
+        <!-- Session Statistics -->
+        <div class="session-summary">
+            <div class="summary-card neutral">
+                <div class="summary-value value-neutral">{{ session_stats.games_played }}</div>
+                <div class="summary-label">Games Played</div>
+            </div>
+            
+            <div class="summary-card {% if session_stats.win_rate >= 45 %}positive{% elif session_stats.win_rate >= 35 %}neutral{% else %}negative{% endif %}">
+                <div class="summary-value {% if session_stats.win_rate >= 45 %}value-positive{% elif session_stats.win_rate >= 35 %}value-neutral{% else %}value-negative{% endif %}">
+                    {{ session_stats.win_rate|floatformat:1 }}%
+                </div>
+                <div class="summary-label">Win Rate</div>
+            </div>
+            
+            <div class="summary-card positive">
+                <div class="summary-value value-positive">{{ session_stats.wins }}</div>
+                <div class="summary-label">Wins</div>
+            </div>
+            
+            <div class="summary-card special">
+                <div class="summary-value value-special">{{ session_stats.blackjacks }}</div>
+                <div class="summary-label">Blackjacks</div>
+            </div>
+            
+            <div class="summary-card negative">
+                <div class="summary-value value-negative">{{ session_stats.losses }}</div>
+                <div class="summary-label">Losses</div>
+            </div>
+            
+            <div class="summary-card neutral">
+                <div class="summary-value value-neutral">{{ session_stats.draws }}</div>
+                <div class="summary-label">Pushes</div>
+            </div>
+            
+            <div class="summary-card neutral">
+                <div class="summary-value value-neutral">${{ session_stats.total_bet|floatformat:0 }}</div>
+                <div class="summary-label">Total Bet</div>
+            </div>
+            
+            <div class="summary-card {% if session_stats.net_result > 0 %}positive{% elif session_stats.net_result == 0 %}neutral{% else %}negative{% endif %}">
+                <div class="summary-value {% if session_stats.net_result > 0 %}value-positive{% elif session_stats.net_result == 0 %}value-neutral{% else %}value-negative{% endif %}">
+                    ${{ session_stats.net_result|floatformat:0 }}
+                </div>
+                <div class="summary-label">Net Result</div>
+            </div>
+        </div>
+        
+        <!-- Quick Analysis -->
+        <div class="quick-stats">
+            <h3>🧠 Bot Performance Analysis</h3>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 15px;">
+                <div>
+                    <strong>Average bet per game:</strong> ${{ bet_per_game }}<br>
+                    <strong>Total games requested:</strong> {{ requested_games }}<br>
+                    <strong>Games actually played:</strong> {{ session_stats.games_played }}<br>
+                </div>
+                <div>
+                    <strong>Starting balance:</strong> ${{ starting_balance }}<br>
+                    <strong>Ending balance:</strong> ${{ player.balance }}<br>
+                    <strong>ROI:</strong> 
+                    {% if session_stats.total_bet > 0 %}
+                        {% widthratio session_stats.balance_change session_stats.total_bet 100 %}%
+                    {% else %}
+                        0%
+                    {% endif %}<br>
+                </div>
+            </div>
+        </div>
+        
+        <div>
+            <h3>🎮 Individual Game Results</h3>
+            <div class="games-grid">
+                {% for game in session_stats.game_results %}
+                <div class="game-card {{ game.result }}">
+                    <div class="game-header">
+                        <span>Game #{{ game.game_num }}</span>
+                        <span>
+                            {% if game.result == 'win' %}✅{% elif game.result == 'lose' %}❌{% elif game.result == 'blackjack' %}🌟{% else %}🤝{% endif %}
+                            {{ game.result|upper }}
+                        </span>
+                    </div>
+                    <div class="game-details">
+                        <strong>Bet:</strong> ${{ game.bet }}<br>
+                        <strong>Payout:</strong> ${{ game.payout }}<br>
+                        {% if game.player_total %}<strong>Player:</strong> {{ game.player_total }}{% endif %}
+                        {% if game.dealer_total %} | <strong>Dealer:</strong> {{ game.dealer_total }}{% endif %}
+                        
+                        {% if game.moves %}
+                        <div class="moves-summary">
+                            <strong>Bot moves:</strong> {{ game.moves|join:", "|upper }}
+                        </div>

@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Bot Playing - {{ player.nickname }}</title>
+    <style>
+        body { 
+            font-family: Arial, sans-serif; 
+            margin: 0; 
+            background: linear-gradient(135deg, #1a1a1a, #2d1b69);
+            color: white;
+            min-height: 100vh;
+        }
+        .container { 
+            max-width: 900px; 
+            margin: 0 auto; 
+            padding: 20px; 
+        }
+        .player-info { 
+            background: rgba(255,255,255,0.1); 
+            padding: 20px; 
+            border-radius: 10px; 
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        .bot-header {
+            background: rgba(45,27,105,0.4);
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+            border: 2px solid #6c5ce7;
+            text-align: center;
+        }
+        .game-area {
+            display: grid;
+            gap: 20px;
+            margin: 20px 0;
+        }
+        .dealer-section, .player-section {
+            background: rgba(255,255,255,0.05);
+            padding: 20px;
+            border-radius: 15px;
+            border: 2px solid rgba(255,255,255,0.1);
+        }
+        .dealer-section {
+            border-color: #dc3545;
+        }
+        .player-section {
+            border-color: #28a745;
+        }
+        .cards {
+            display: flex;
+            gap: 10px;
+            margin: 15px 0;
+            flex-wrap: wrap;
+        }
+        .card {
+            background: white;
+            color: black;
+            padding: 10px 15px;
+            border-radius: 8px;
+            font-weight: bold;
+            font-size: 1.2em;
+            min-width: 40px;
+            text-align: center;
+            box-shadow: 0 3px 6px rgba(0,0,0,0.3);
+        }
+        .card.red { color: #dc3545; }
+        .card.black { color: #000; }
+        .card.hidden {
+            background: #6c5ce7;
+            color: white;
+        }
+        .total {
+            font-size: 1.5em;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+        .dealer-total { color: #dc3545; }
+        .player-total { color: #28a745; }
+        
+        .bot-recommendation {
+            background: rgba(108, 92, 231, 0.3);
+            border: 2px solid #6c5ce7;
+            padding: 20px;
+            border-radius: 15px;
+            margin: 20px 0;
+        }
+        
+        .recommendation-action {
+            font-size: 1.3em;
+            font-weight: bold;
+            color: #a29bfe;
+            margin-bottom: 10px;
+        }
+        
+        .recommendation-explanation {
+            font-size: 1.1em;
+            opacity: 0.9;
+            line-height: 1.4;
+        }
+        
+        .split-hands {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+        
+        .split-hand {
+            background: rgba(255,255,255,0.05);
+            padding: 15px;
+            border-radius: 10px;
+            border: 2px solid;
+        }
+        
+        .split-hand.current {
+            border-color: #ffd700;
+            background: rgba(255, 215, 0, 0.1);
+        }
+        
+        .split-hand.normal {
+            border-color: #28a745;
+        }
+        
+        .split-hand.bust {
+            border-color: #dc3545;
+            opacity: 0.7;
+        }
+        
+        .actions {
+            text-align: center;
+            margin: 30px 0;
+        }
+        
+        .btn {
+            padding: 15px 25px;
+            margin: 10px;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+            transition: all 0.3s;
+            font-weight: bold;
+        }
+        
+        .btn-primary { 
+            background: linear-gradient(45deg, #6c5ce7, #a29bfe); 
+            color: white; 
+        }
+        .btn-primary:hover { 
+            background: linear-gradient(45deg, #5f4fcf, #8b7ed8); 
+            transform: translateY(-2px);
+        }
+        
+        .btn-secondary { 
+            background: #6c757d; 
+            color: white; 
+        }
+        .btn-secondary:hover { 
+            background: #545b62; 
+        }
+        
+        .btn-warning { 
+            background: #ffc107; 
+            color: black; 
+        }
+        .btn-warning:hover { 
+            background: #e0a800; 
+        }
+        
+        .moves-history {
+            background: rgba(255,255,255,0.05);
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        
+        .move-item {
+            padding: 10px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            margin: 5px 0;
+        }
+        
+        .move-action {
+            font-weight: bold;
+            color: #a29bfe;
+        }
+        
+        .game-status {
+            text-align: center;
+            font-size: 1.5em;
+            font-weight: bold;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 15px;
+        }
+        
+        .status-playing { 
+            background: rgba(40, 167, 69, 0.3); 
+            border: 2px solid #28a745;
+            color: #28a745;
+        }
+        .status-finished { 
+            background: rgba(108, 92, 231, 0.3); 
+            border: 2px solid #6c5ce7;
+            color: #a29bfe;
+        }
+        .status-bust { 
+            background: rgba(220, 53, 69, 0.3); 
+            border: 2px solid #dc3545;
+            color: #dc3545;
+        }
+        
+        .emoji { font-size: 2em; margin: 0 10px; }
+        
+        h1, h2, h3 { color: #a29bfe; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="player-info">
+            <h2>{{ player.nickname }}</h2>
+            <p>Balance: ${{ player.balance }} | Bet: ${{ bet_amount }}</p>
+        </div>
+        
+        <div class="bot-header">
+            <h1>🤖 Blackjack Bot in Action</h1>
+            <p>Watching AI make mathematically optimal decisions</p>
+        </div>
+        
+        <!-- Game Status -->
+        <div class="game-status 
+            {% if game_state.status == 'playing' or game_state.status == 'split_done' or game_state.status == 'next_hand' %}status-playing
+            {% elif game_state.status == 'bust' or game_state.status == 'bust_double' %}status-bust
+            {% else %}status-finished{% endif %}">
+            
+            {% if game_state.status == 'playing' %}
+                <span class="emoji">🎮</span> Bot is thinking...
+            {% elif game_state.status == 'split_done' %}
+                <span class="emoji">✂️</span> Bot performed split!
+            {% elif game_state.status == 'next_hand' %}
+                <span class="emoji">➡️</span> Moving to next hand
+            {% elif game_state.status == 'bust' %}
+                <span class="emoji">💥</span> Hand busted!
+            {% elif game_state.status == 'finished' %}
+                <span class="emoji">🎯</span> Round completed!
+            {% else %}
+                <span class="emoji">🤖</span> {{ game_state.status|title }}
+            {% endif %}
+        </div>
+        
+        <div class="game-area">
+            <!-- Dealer Section -->
+            <div class="dealer-section">
+                <h3>🎰 Dealer</h3>
+                <div class="cards">
+                    {% if game_state.dealer_cards %}
+                        {% for card in game_state.dealer_cards %}
+                            <div class="card {% if '♥' in card or '♦' in card %}red{% else %}black{% endif %}">
+                                {{ card }}
+                            </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="card {% if '♥' in game_state.dealer_visible or '♦' in game_state.dealer_visible %}red{% else %}black{% endif %}">
+                            {{ game_state.dealer_visible }}
+                        </div>
+                        <div class="card hidden">?</div>
+                    {% endif %}
+                </div>
+                
+                {% if game_state.dealer_total %}
+                    <div class="total dealer-total">Total: {{ game_state.dealer_total }}</div>
+                {% else %}
+                    <div class="total dealer-total">Visible: {{ game_state.dealer_visible }}</div>
+                {% endif %}
+            </div>
+            
+            <!-- Player Section -->
+            <div class="player-section">
+                <h3>🤖 Bot Hands</h3>
+                
+                {% if game_state.all_hands %}
+                    <!-- Split Mode -->
+                    <div class="split-hands">
+                        {% for hand in game_state.all_hands %}
+                            <div class="split-hand 
+                                {% if hand.is_current %}current
+                                {% elif hand.is_bust %}bust
+                                {% else %}normal{% endif %}">
+                                
+                                <h4>Hand {{ hand.index|add:1 }}
+                                    {% if hand.is_current %}(Current){% endif %}
+                                    {% if hand.is_bust %}(BUST){% endif %}
+                                </h4>
+                                
+                                <div class="cards">
+                                    {% for card in hand.cards %}
+                                        <div class="card {% if '♥' in card or '♦' in card %}red{% else %}black{% endif %}">
+                                            {{ card }}
+                                        </div>
+                                    {% endfor %}
+                                </div>
+                                
+                                <div class="total {% if hand.is_bust %}dealer-total{% else %}player-total{% endif %}">
+                                    Total: {{ hand.total }}
+                                </div>
+                                <div>Bet: ${{ hand.bet }}</div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <!-- Single Hand Mode -->
+                    <div class="cards">
+                        {% for card in game_state.player_cards %}
+                            <div class="card {% if '♥' in card or '♦' in card %}red{% else %}black{% endif %}">
+                                {{ card }}
+                            </div>
+                        {% endfor %}
+                    </div>
+                    
+                    <div class="total player-total">Total: {{ game_state.player_total }}</div>
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- Bot Recommendation -->
+        {% if game_state.bot_recommendation %}
+        <div class="bot-recommendation">
+            <div class="recommendation-action">
+                🧠 Bot Recommends: {{ game_state.bot_recommendation|upper }}
+            </div>
+            {% if game_state.bot_explanation %}
+            <div class="recommendation-explanation">
+                {{ game_state.bot_explanation }}
+            </div>
+            {% endif %}
+        </div>
+        {% endif %}
+        
+        <!-- Moves History -->
+        {% if moves_history %}
+        <div class="moves-history">
+            <h3>📊 Bot Decision History</h3>
+            {% for move in moves_history %}
+            <div class="move-item">
+                <div class="move-action">{{ forloop.counter }}. {{ move.action|upper }}</div>
+                <div>{{ move.explanation }}</div>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+        
+        <!-- Actions -->
+        <div class="actions">
+            {% if game_state.status == 'finished' or game_state.status == 'bust' or game_state.status == 'bust_double' %}
+                <!-- Game Over - Show Results -->
+                <div style="margin: 20px 0; font-size: 1.2em;">
+                    {% if game_state.hand_results %}
+                        <!-- Split Results -->
+                        <h3>Split Results:</h3>
+                        {% for result in game_state.hand_results %}
+                            <p>Hand {{ result.hand_index|add:1 }}: 
+                                {% if result.result == 'win' %}✅ WIN{% elif result.result == 'lose' %}❌ LOSE{% else %}🤝 PUSH{% endif %}
+                                (Total: {{ result.player_total }}, Bet: ${{ result.bet }})
+                            </p>
+                        {% endfor %}
+                        <p><strong>Total Payout: ${{ game_state.total_payout }}</strong></p>
+                    {% else %}
+                        <!-- Single Hand Result -->
+                        {% if game_state.status == 'bust' or game_state.status == 'bust_double' %}
+                            <p>❌ Bot busted with {{ game_state.player_total }}</p>
+                        {% elif game_state.result == 'win' %}
+                            <p>✅ Bot won!</p>
+                        {% elif game_state.result == 'lose' %}
+                            <p>❌ Bot lost!</p>
+                        {% else %}
+                            <p>🤝 Push!</p>
+                        {% endif %}
+                    {% endif %}
+                </div>
+                
+                <a href="{% url 'bot_play' player.id %}" class="btn btn-primary">🤖 Play Again</a>
+                <a href="{% url 'bot_statistics' player.id %}" class="btn btn-warning">📊 Statistics</a>
+                <a href="{% url 'home' %}" class="btn btn-secondary">🏠 Home</a>
+            {% else %}
+                <!-- Game in Progress -->
+                <form method="post" style="display: inline;">
+                    {% csrf_token %}
+                    <button type="submit" name="auto_play" class="btn btn-primary">
+                        🤖 Let Bot Play Automatically
+                    </button>
+                </form>
+                
+                <a href="{% url 'home' %}" class="btn btn-secondary">🏠 Home</a>
+            {% endif %}
+        </div>
+    </div>
+</body>
+</html>
