@@ -11,9 +11,9 @@ class Player(models.Model):
 class Game(models.Model):
     player = models.ForeignKey(Player, on_delete=models.CASCADE)
     bet_amount = models.DecimalField(max_digits=8, decimal_places=2)
-    player_cards = models.JSONField()  # Lista kart gracza
-    dealer_cards = models.JSONField()  # Lista kart dealera
-    result = models.CharField(max_length=10)  # 'win', 'lose', 'draw'
+    player_cards = models.JSONField()
+    dealer_cards = models.JSONField()
+    result = models.CharField(max_length=10)
     payout = models.DecimalField(max_digits=8, decimal_places=2, default=0)
     created_at = models.DateTimeField(auto_now_add=True)
     
@@ -24,9 +24,9 @@ class RouletteGameModel(models.Model):
     player = models.ForeignKey(Player, on_delete=models.CASCADE)
     total_bet = models.DecimalField(max_digits=8, decimal_places=2)
     winning_number = models.IntegerField()
-    winning_color = models.CharField(max_length=10)  # 'red', 'black', 'green'
+    winning_color = models.CharField(max_length=10)
     total_payout = models.DecimalField(max_digits=8, decimal_places=2, default=0)
-    bets_data = models.JSONField()  # Lista zakładów
+    bets_data = models.JSONField()
     created_at = models.DateTimeField(auto_now_add=True)
     
     def __str__(self):
@@ -34,9 +34,9 @@ class RouletteGameModel(models.Model):
 
 class RouletteBet(models.Model):
     game = models.ForeignKey(RouletteGameModel, on_delete=models.CASCADE)
-    bet_type = models.CharField(max_length=20)  # 'red', 'black', 'number', etc.
+    bet_type = models.CharField(max_length=20)
     bet_amount = models.DecimalField(max_digits=8, decimal_places=2)
-    bet_number = models.IntegerField(null=True, blank=True)  # Tylko dla zakładu na konkretny numer
+    bet_number = models.IntegerField(null=True, blank=True)
     won = models.BooleanField(default=False)
     payout = models.DecimalField(max_digits=8, decimal_places=2, default=0)
     
