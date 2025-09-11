@@ -3,31 +3,109 @@
 <head>
     <title>Blackjack Web</title>
     <style>
-        body { font-family: Arial; margin: 40px; }
+        body { 
+            font-family: Arial, sans-serif; 
+            margin: 40px; 
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            min-height: 100vh;
+            color: white;
+        }
+        .container { max-width: 800px; margin: 0 auto; }
+        .header {
+            text-align: center;
+            padding: 40px 0;
+            background: rgba(255,255,255,0.1);
+            border-radius: 20px;
+            margin-bottom: 30px;
+        }
         .player-list { margin: 20px 0; }
-        .player-item { padding: 10px; border: 1px solid #ddd; margin: 5px 0; }
-        .btn { padding: 10px 20px; background: #007cba; color: white; text-decoration: none; }
+        .player-item { 
+            padding: 20px; 
+            border: 2px solid rgba(255,255,255,0.2); 
+            margin: 15px 0; 
+            border-radius: 15px;
+            background: rgba(255,255,255,0.05);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .player-info {
+            flex-grow: 1;
+        }
+        .player-name {
+            font-size: 1.3em;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        .player-balance {
+            font-size: 1.1em;
+            opacity: 0.8;
+        }
+        .game-buttons {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        .btn { 
+            padding: 12px 20px; 
+            background: #007bff; 
+            color: white; 
+            text-decoration: none; 
+            border-radius: 8px;
+            font-weight: bold;
+            transition: all 0.3s;
+            border: none;
+            cursor: pointer;
+        }
+        .btn:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(0,0,0,0.2); }
+        .btn-blackjack { background: linear-gradient(45deg, #28a745, #20c997); }
+        .btn-roulette { background: linear-gradient(45deg, #dc3545, #fd7e14); }
+        .btn-bot { background: linear-gradient(45deg, #6c5ce7, #a29bfe); }
+        .btn-create { background: linear-gradient(45deg, #17a2b8, #6f42c1); }
+        .create-section {
+            text-align: center;
+            margin: 30px 0;
+        }
+        .no-players {
+            text-align: center;
+            padding: 50px;
+            opacity: 0.7;
+        }
+        h1 { color: #fff; text-shadow: 2px 2px 4px rgba(0,0,0,0.3); }
     </style>
 </head>
 <body>
-    <h1>Blackjack Web</h1>
-    
-    <div>
-        <a href="{% url 'create_player' %}" class="btn">Create New Player</a>
-    </div>
-    
-    <div class="player-list">
-    <h2>Players:</h2>
-    {% for player in players %}
-        <div class="player-item">
-            <strong>{{ player.nickname }}</strong> - Balance: ${{ player.balance }}
-            <a href="{% url 'play_game' player.id %}" class="btn" style="margin-left: 20px;">🃏 Blackjack</a>
-            <a href="{% url 'play_roulette' player.id %}" class="btn" style="background: #dc3545;">🎰 Roulette</a>
+    <div class="container">
+        <div class="header">
+            <h1>🎰 Blackjack Web Casino 🎰</h1>
+            <p>Play Blackjack and Roulette with advanced AI bot!</p>
         </div>
-    {% empty %}
-        <p>No players yet. Create one!</p>
-    {% endfor %}
-</div>
+        
+        <div class="create-section">
+            <a href="{% url 'create_player' %}" class="btn btn-create">👤 Create New Player</a>
+        </div>
+        
+        <div class="player-list">
+            <h2>🎮 Players</h2>
+            {% for player in players %}
+                <div class="player-item">
+                    <div class="player-info">
+                        <div class="player-name">{{ player.nickname }}</div>
+                        <div class="player-balance">Balance: ${{ player.balance }}</div>
+                    </div>
+                    <div class="game-buttons">
+                        <a href="{% url 'play_game' player.id %}" class="btn btn-blackjack">🃏 Blackjack</a>
+                        <a href="{% url 'bot_play' player.id %}" class="btn btn-bot">🤖 AI Bot</a>
+                        <a href="{% url 'play_roulette' player.id %}" class="btn btn-roulette">🎰 Roulette</a>
+                    </div>
+                </div>
+            {% empty %}
+                <div class="no-players">
+                    <h3>No players yet</h3>
+                    <p>Create your first player to start gambling!</p>
+                </div>
+            {% endfor %}
+        </div>
     </div>
 </body>
 </html>

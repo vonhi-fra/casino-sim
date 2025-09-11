@@ -1,0 +1,188 @@
+<!-- blackjack_web/blackjack/templates/blackjack/bot_setup.html -->
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Blackjack Bot - {{ player.nickname }}</title>
+    <style>
+        body { 
+            font-family: Arial, sans-serif; 
+            margin: 0; 
+            background: linear-gradient(135deg, #1a1a1a, #2d1b69);
+            color: white;
+            min-height: 100vh;
+        }
+        .container { 
+            max-width: 600px; 
+            margin: 0 auto; 
+            padding: 20px; 
+        }
+        .player-info { 
+            background: rgba(255,255,255,0.1); 
+            padding: 20px; 
+            border-radius: 10px; 
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        .bot-card { 
+            background: rgba(45,27,105,0.3); 
+            padding: 30px; 
+            border-radius: 15px; 
+            margin: 20px 0;
+            border: 2px solid #6c5ce7;
+        }
+        .bot-icon {
+            font-size: 4em;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .feature-list {
+            list-style: none;
+            padding: 0;
+            margin: 20px 0;
+        }
+        .feature-list li {
+            padding: 10px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+        .feature-list li:before {
+            content: "🤖";
+            margin-right: 10px;
+        }
+        .bet-form {
+            background: rgba(255,255,255,0.05);
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+        }
+        input {
+            width: 100%;
+            padding: 12px;
+            margin: 10px 0;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            background: rgba(255,255,255,0.1);
+            color: white;
+            border: 2px solid transparent;
+            box-sizing: border-box;
+        }
+        input:focus {
+            border-color: #6c5ce7;
+            outline: none;
+            background: rgba(255,255,255,0.15);
+        }
+        input::placeholder {
+            color: rgba(255,255,255,0.5);
+        }
+        .btn {
+            padding: 15px 30px;
+            margin: 10px;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+            transition: all 0.3s;
+            font-weight: bold;
+        }
+        .btn-primary { 
+            background: linear-gradient(45deg, #6c5ce7, #a29bfe); 
+            color: white; 
+        }
+        .btn-primary:hover { 
+            background: linear-gradient(45deg, #5f4fcf, #8b7ed8); 
+            transform: translateY(-2px);
+        }
+        .btn-secondary { 
+            background: #6c757d; 
+            color: white; 
+        }
+        .btn-secondary:hover { 
+            background: #545b62; 
+        }
+        .error { 
+            background: rgba(220, 53, 69, 0.3); 
+            padding: 15px; 
+            border-radius: 10px; 
+            margin: 15px 0; 
+            text-align: center;
+            border: 1px solid #dc3545;
+        }
+        .suggestion {
+            background: rgba(40, 167, 69, 0.3);
+            padding: 15px;
+            border-radius: 10px;
+            margin: 15px 0;
+            border: 1px solid #28a745;
+        }
+        .text-center { 
+            text-align: center; 
+        }
+        h1, h2, h3 { 
+            color: #a29bfe; 
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="player-info">
+            <h2>{{ player.nickname }}</h2>
+            <p>Balance: ${{ player.balance }}</p>
+        </div>
+
+        {% if error %}
+            <div class="error">❌ {{ error }}</div>
+        {% endif %}
+
+        <div class="bot-card">
+            <div class="bot-icon">🤖</div>
+            <h1 class="text-center">Blackjack Bot</h1>
+            <p class="text-center" style="font-size: 1.2em; opacity: 0.9;">
+                Matematycznie optymalna strategia gry
+            </p>
+            
+            <ul class="feature-list">
+                <li><strong>Basic Strategy</strong> - Probabilistyczne kalkulacje dla każdej sytuacji</li>
+                <li><strong>Automatic Play</strong> - Bot rozgrywa całą rękę automatycznie</li>
+                <li><strong>Smart Betting</strong> - Zarządzanie bankrollem</li>
+                <li><strong>Split & Double</strong> - Zaawansowane techniki</li>
+                <li><strong>Detailed Analysis</strong> - Wyjaśnienie każdej decyzji</li>
+            </ul>
+        </div>
+
+        <div class="bet-form">
+            <h3>🎯 Ustawienia Gry</h3>
+            
+            {% if suggested_bet %}
+            <div class="suggestion">
+                💡 <strong>Rekomendowany zakład:</strong> ${{ suggested_bet }}
+                <br><small>Bot sugeruje 2% Twojego balansu</small>
+            </div>
+            {% endif %}
+
+            <form method="post">
+                {% csrf_token %}
+                <div>
+                    <label><strong>Kwota zakładu:</strong></label>
+                    <input type="number" name="bet_amount" 
+                           value="{{ suggested_bet|default:100 }}" 
+                           min="1" max="{{ player.balance }}" 
+                           placeholder="Wprowadź kwotę zakładu" required>
+                </div>
+                
+                <div class="text-center" style="margin-top: 25px;">
+                    <button type="submit" name="start_bot" class="btn btn-primary">
+                        🤖 Uruchom Bota
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <div class="text-center">
+            <a href="{% url 'play_game' player.id %}" class="btn btn-secondary">🎮 Graj Sam</a>
+            <a href="{% url 'home' %}" class="btn btn-secondary">🏠 Home</a>
+        </div>
+    </div>
+</body>
+</html>

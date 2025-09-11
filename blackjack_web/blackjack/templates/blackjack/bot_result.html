@@ -1,0 +1,278 @@
+<!-- blackjack_web/blackjack/templates/blackjack/bot_result.html -->
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Bot Game Result - {{ player.nickname }}</title>
+    <style>
+        body { 
+            font-family: Arial, sans-serif; 
+            margin: 0; 
+            background: linear-gradient(135deg, #1a1a1a, #2d1b69);
+            color: white;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .container { 
+            max-width: 700px; 
+            padding: 40px; 
+            text-align: center; 
+        }
+        .result-card { 
+            background: rgba(255,255,255,0.1); 
+            padding: 40px; 
+            border-radius: 20px; 
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+        .result-win { 
+            border: 3px solid #28a745; 
+        }
+        .result-lose { 
+            border: 3px solid #dc3545; 
+        }
+        .result-draw { 
+            border: 3px solid #ffc107; 
+        }
+        .result-blackjack { 
+            border: 3px solid #ffd700; 
+            background: rgba(255, 215, 0, 0.1); 
+        }
+        
+        .bot-header {
+            background: rgba(45,27,105,0.4);
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+            border: 2px solid #6c5ce7;
+        }
+        
+        h1 { 
+            font-size: 2.5em; 
+            margin-bottom: 20px; 
+        }
+        .win-title { 
+            color: #28a745; 
+        }
+        .lose-title { 
+            color: #dc3545; 
+        }
+        .draw-title { 
+            color: #ffc107; 
+        }
+        .blackjack-title { 
+            color: #ffd700; 
+        }
+        
+        .stats { 
+            margin: 30px 0; 
+            font-size: 1.2em; 
+        }
+        .stats p { 
+            margin: 10px 0; 
+        }
+        
+        .payout { 
+            font-size: 1.5em; 
+            font-weight: bold; 
+            margin: 20px 0; 
+            padding: 15px; 
+            border-radius: 10px;
+        }
+        .payout-win { 
+            background: rgba(40, 167, 69, 0.3); 
+        }
+        .payout-lose { 
+            background: rgba(220, 53, 69, 0.3); 
+        }
+        .payout-draw { 
+            background: rgba(255, 193, 7, 0.3); 
+        }
+        
+        .moves-analysis {
+            background: rgba(255,255,255,0.05);
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            text-align: left;
+        }
+        
+        .move-item {
+            padding: 10px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            margin: 5px 0;
+        }
+        
+        .move-action {
+            font-weight: bold;
+            color: #a29bfe;
+        }
+        
+        .actions { 
+            margin-top: 30px; 
+        }
+        .btn { 
+            padding: 15px 30px; 
+            margin: 10px; 
+            border: none; 
+            border-radius: 10px; 
+            font-size: 18px;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+            transition: all 0.3s;
+        }
+        .btn-primary { 
+            background: linear-gradient(45deg, #6c5ce7, #a29bfe); 
+            color: white; 
+        }
+        .btn-primary:hover { 
+            background: linear-gradient(45deg, #5f4fcf, #8b7ed8); 
+        }
+        .btn-secondary { 
+            background: #6c757d; 
+            color: white; 
+        }
+        .btn-secondary:hover { 
+            background: #545b62; 
+        }
+        .btn-success { 
+            background: #28a745; 
+            color: white; 
+        }
+        .btn-success:hover { 
+            background: #218838; 
+        }
+        
+        .emoji { 
+            font-size: 3em; 
+            margin: 20px 0; 
+        }
+        
+        .split-results {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+        
+        .split-result-item {
+            background: rgba(255,255,255,0.05);
+            padding: 15px;
+            border-radius: 10px;
+            border: 2px solid;
+        }
+        
+        .split-win { 
+            border-color: #28a745; 
+        }
+        .split-lose { 
+            border-color: #dc3545; 
+        }
+        .split-draw { 
+            border-color: #ffc107; 
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="result-card 
+            {% if result == 'blackjack' %}result-blackjack
+            {% elif result == 'win' or game_state.result == 'win' %}result-win
+            {% elif result == 'lose' or game_state.result == 'lose' %}result-lose
+            {% else %}result-draw{% endif %}">
+            
+            <div class="bot-header">
+                <h2>🤖 Bot Performance Analysis</h2>
+            </div>
+            
+            <!-- Result Title -->
+            {% if result == 'blackjack' %}
+                <div class="emoji">🤖✨🎰</div>
+                <h1 class="blackjack-title">PERFECT BLACKJACK!</h1>
+                <p>Bot achieved optimal 21!</p>
+            {% elif result == 'win' or game_state.result == 'win' %}
+                <div class="emoji">🤖🏆💰</div>
+                <h1 class="win-title">BOT VICTORY!</h1>
+                <p>Mathematical strategy wins again!</p>
+            {% elif result == 'lose' or game_state.result == 'lose' %}
+                <div class="emoji">🤖😐📊</div>
+                <h1 class="lose-title">Statistical Loss</h1>
+                <p>Even optimal play has variance!</p>
+            {% else %}
+                <div class="emoji">🤖🤝💼</div>
+                <h1 class="draw-title">Strategic Push</h1>
+                <p>Perfect defensive play!</p>
+            {% endif %}
+
+            <!-- Game Stats -->
+            <div class="stats">
+                {% if split_results %}
+                    <!-- Split results -->
+                    <h3>Split Hand Analysis:</h3>
+                    <div class="split-results">
+                        {% for hand in split_results %}
+                            <div class="split-result-item split-{% if hand.result == 'win' %}win{% elif hand.result == 'lose' %}lose{% else %}draw{% endif %}">
+                                <strong>Hand {{ hand.hand_index|add:1 }}</strong><br>
+                                Total: {{ hand.player_total }}<br>
+                                {% if hand.result == 'win' %}✅ WIN{% elif hand.result == 'lose' %}❌ LOSE{% else %}🤝 PUSH{% endif %}<br>
+                                Bet: ${{ hand.bet }}
+                            </div>
+                        {% endfor %}
+                    </div>
+                    {% if game_state.dealer_total %}
+                        <p><strong>Dealer Total:</strong> {{ game_state.dealer_total }}</p>
+                    {% endif %}
+                {% else %}
+                    {% if game_state %}
+                        <p><strong>Bot Total:</strong> {{ game_state.player_total }}</p>
+                        {% if game_state.dealer_total %}
+                            <p><strong>Dealer Total:</strong> {{ game_state.dealer_total }}</p>
+                        {% endif %}
+                    {% endif %}
+                {% endif %}
+                <p><strong>Total Bet:</strong> ${{ bet_amount }}</p>
+            </div>
+
+            <!-- Bot Moves Analysis -->
+            {% if moves_history %}
+            <div class="moves-analysis">
+                <h3>🧠 Bot Decision Analysis</h3>
+                {% for move in moves_history %}
+                <div class="move-item">
+                    <div class="move-action">{{ forloop.counter }}. {{ move.action|upper }}</div>
+                    <div>{{ move.explanation }}</div>
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            <!-- Payout Info -->
+            <div class="payout {% if result == 'win' or result == 'blackjack' or game_state.result == 'win' %}payout-win{% elif result == 'lose' or game_state.result == 'lose' %}payout-lose{% else %}payout-draw{% endif %}">
+                {% if result == 'blackjack' %}
+                    🤖💰 Bot won: ${{ payout }}
+                    <br><small>(3:2 Blackjack bonus!)</small>
+                {% elif result == 'win' or game_state.result == 'win' %}
+                    🤖💰 Bot won: ${{ payout }}
+                {% elif result == 'lose' or game_state.result == 'lose' %}
+                    🤖💸 Bot lost: ${{ bet_amount }}
+                {% else %}
+                    🤖💰 Bet returned: ${{ bet_amount }}
+                {% endif %}
+            </div>
+
+            <!-- New Balance -->
+            <div class="stats">
+                <p><strong>New Balance:</strong> ${{ player.balance }}</p>
+            </div>
+
+            <!-- Actions -->
+            <div class="actions">
+                <a href="{% url 'bot_play' player.id %}" class="btn btn-primary">🤖 Bot Again</a>
+                <a href="{% url 'bot_statistics' player.id %}" class="btn btn-success">📊 Statistics</a>
+                <a href="{% url 'home' %}" class="btn btn-secondary">🏠 Home</a>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
