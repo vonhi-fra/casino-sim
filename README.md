@@ -19,3 +19,5 @@ python manage.py migrate
 python manage.py runserver
 
 6. visit http://127.0.0.1:8000/
+
+To clear database use: python manage.py flush
