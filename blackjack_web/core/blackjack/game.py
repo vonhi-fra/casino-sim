@@ -260,26 +260,6 @@ class WebBlackjackGame:
             }
             for i, hand in enumerate(self.player_hands)
         ]
-        if not self.player_hands:
-            return 0
-            
-        total_payout = 0
-        for hand in self.player_hands:
-            bet_amount = hand.get_bet()
-            
-            if result_status == 'lose' or result_status == 'bust':
-                continue  
-            elif result_status == 'draw':
-                total_payout += bet_amount  
-            elif result_status == 'win':
-                if is_blackjack:
-                    total_payout += bet_amount + (bet_amount * 1.5)  
-                else:
-                    total_payout += bet_amount * 2 
-            else:
-                total_payout += bet_amount  
-        
-        return total_payout
     
     def to_dict(self):
         return {
